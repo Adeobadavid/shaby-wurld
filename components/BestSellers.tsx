@@ -2,20 +2,13 @@ import ProductCard, { ProductCardData } from "./ProductCard";
 
 /**
  * Best Sellers — Figma node 265:1145.
- * Horizontal padding matches the nav's 70px per explicit request
- * (Figma's own value here is 60px).
+ * Section padding matches nav (70px) per explicit request (Figma's own
+ * value here is 60px). Grid gap is 25px (Figma: 448.667 - 422.667 = 26px)
+ * to actually separate the cards.
  *
- * PLACEHOLDER PRODUCT DATA — the photos here are stand-ins only, not
- * Shaby Wurld's own product photography (two are real Fenty Beauty
- * product shots, one is a real "Essentials" lip balm tin). Fine for
- * proving out the layout and the hover slider, but these need to be
- * swapped for the client's own photos before this goes live — shipping
- * a competitor's branded packaging as if it's Shaby Wurld's own product
- * is a real trademark problem, not just a visual placeholder issue.
- *
- * `images` is an array per product on purpose: once real photography
- * (multiple angles) lands in Sanity, the hover-slide just starts working
- * with zero code changes — swap this hardcoded array for a CMS query.
+ * PLACEHOLDER PRODUCT DATA — see prior note: two photos are real Fenty
+ * Beauty shots, one is a real Essentials tin. Swap for Shaby Wurld's own
+ * photography before launch.
  */
 const PRODUCTS: ProductCardData[] = [
   {
@@ -58,12 +51,12 @@ export default function BestSellers() {
             <button
               key={filter}
               className={`group relative pb-[5px] font-body text-[16px] transition-colors ${
-                i === 0 ? "text-[#262626]" : "text-[#a79b99] hover:text-[#262626]"
+                i === 0 ? "text-sw-blush" : "text-[#828282] hover:text-sw-blush"
               }`}
             >
               {filter}
               <span
-                className={`absolute -bottom-0 left-0 h-px bg-[#262626] transition-all duration-200 ${
+                className={`absolute -bottom-0 left-0 h-px bg-sw-blush transition-all duration-200 ${
                   i === 0 ? "w-full" : "w-0 group-hover:w-full"
                 }`}
               />
@@ -72,7 +65,7 @@ export default function BestSellers() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-0">
+      <div className="grid grid-cols-1 gap-[25px] sm:grid-cols-2 lg:grid-cols-3">
         {PRODUCTS.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}

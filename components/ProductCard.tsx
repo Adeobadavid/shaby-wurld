@@ -48,9 +48,11 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Slide dots */}
+      {/* Slide dots — always 3, matching Figma's fixed layout. Only real
+          images actually cycle; unused dots stay in the default/inactive
+          state until more photos exist for this product. */}
       <div className="flex w-full items-center justify-center gap-[7px] pt-[45px]">
-        {product.images.map((_, i) => (
+        {[0, 1, 2].map((i) => (
           <span
             key={i}
             className={`h-[2px] w-3 transition-colors ${
@@ -72,7 +74,7 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
           />
         </div>
         {hovered && (
-          <button className="absolute bottom-[15px] left-1/2 flex h-[50px] w-[90%] max-w-[374px] -translate-x-1/2 items-center justify-center bg-sw-blush font-body text-[16px] text-sw-cream transition-colors hover:bg-[#95402f]">
+          <button className="absolute bottom-[15px] left-[25px] right-[25px] flex h-[50px] items-center justify-center bg-sw-blush font-body text-[16px] text-sw-cream transition-colors hover:bg-[#95402f]">
             Quick view
           </button>
         )}

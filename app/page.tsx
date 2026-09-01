@@ -1,6 +1,10 @@
 import Hero from "@/components/Hero";
 import Benefits from "@/components/Benefits";
 import BestSellers from "@/components/BestSellers";
+import PerfectLiner from "@/components/PerfectLiner";
+import BrandStory from "@/components/BrandStory";
+import Reviews from "@/components/Reviews";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
@@ -8,7 +12,10 @@ export default function Home() {
       <Hero />
       <Benefits />
       <BestSellers />
-      {/* Perfect Liner feature, Brand Story, Reviews, and Footer come next. */}
+      <PerfectLiner />
+      <BrandStory />
+      <Reviews />
+      <Footer />
     </main>
   );
 }

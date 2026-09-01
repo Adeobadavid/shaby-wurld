@@ -1,9 +1,9 @@
 import Image from "next/image";
 
 /**
- * Hero section — Figma file "Shaby Wurld", node 265:1105 ("Desktop - 3"),
- * nav bar states from 321:1124 (Default/Variant2 = hover, not scroll),
- * and the scroll indicator from 321:1118 (Default/Variant2 = hover reveal).
+ * Hero section — Figma node 265:1105, nav states from 321:1124/321:1137
+ * (Variant2 hover fills the FULL nav strip, edge-to-edge, not a box
+ * hugging the logo/links), and the scroll indicator from 321:1118.
  */
 
 const NAV_LINKS = [
@@ -19,22 +19,24 @@ function ScrollIndicator() {
       aria-label="Scroll to shop"
       className="group relative flex h-[65px] w-[35px] items-center justify-center"
     >
-      {/* Default: plain arrow pill, visible at rest */}
+      {/* Default: plain arrow, visible at rest, scales 1.2x and fades out on hover */}
       <img
         src="/icons/up-arrow.svg"
         alt=""
-        className="absolute h-[56px] w-[30px] transition-opacity duration-200 group-hover:opacity-0"
+        className="absolute h-[56px] w-[30px] transition-all duration-200 group-hover:scale-[1.2] group-hover:opacity-0"
       />
 
-      {/* Variant2: bordered pill + "Shop" label, revealed on hover */}
-      <div className="absolute inset-0 flex scale-90 flex-col items-center justify-center gap-[10px] rounded-[17px] border border-sw-cream px-[7px] py-[15px] opacity-0 transition-all duration-200 group-hover:scale-100 group-hover:opacity-90">
-        <svg width="14" height="24" viewBox="8 16 14 24" fill="none">
+      {/* Hover: bordered pill, small arrow + separate "Shop" label beneath it */}
+      <div className="absolute inset-0 flex scale-90 flex-col items-center justify-center gap-[10px] rounded-[17px] border border-sw-cream bg-sw-blush/40 px-[7px] py-[15px] opacity-0 transition-all duration-200 group-hover:scale-[1.2] group-hover:opacity-100">
+        <svg width="14" height="24" viewBox="8 16 14 24" fill="none" className="shrink-0">
           <path
             d="M22 32C21.258 32 20.15 32.733 19.22 33.475C18.02 34.429 16.973 35.569 16.174 36.876C15.575 37.856 15 39.044 15 40M15 40C15 39.044 14.425 37.855 13.826 36.876C13.026 35.569 11.979 34.429 10.781 33.475C9.85 32.733 8.74 32 8 32M15 40V16"
             stroke="#F4EFE9"
           />
         </svg>
-        <span className="whitespace-nowrap font-body text-[16px] text-sw-cream">Shop</span>
+        <span className="whitespace-nowrap font-body text-[16px] leading-none text-sw-cream">
+          Shop
+        </span>
       </div>
     </a>
   );
@@ -64,46 +66,46 @@ export default function Hero() {
         />
       </div>
 
-      {/* Content column — fluid padding, no max-width cap: true full-bleed */}
-      <div className="relative flex h-full w-full flex-col px-6 pb-10 pt-6 sm:px-10 lg:px-[70px] lg:pt-[50px]">
-        {/* Nav bar — Variant2 (translucent overlay) is a HOVER state, not scroll-linked */}
-        <nav className="flex w-full items-center justify-between rounded-[12px] px-2 py-2 transition-colors duration-200 hover:bg-[rgba(255,178,166,0.2)]">
-          <a href="/" className="block h-[26px] w-[160px] sm:h-[31px] sm:w-[197px]">
-            <img
-              src="/icons/logo-lockup.svg"
-              alt="Shaby Wurld"
-              className="h-full w-full mix-blend-plus-lighter"
-            />
-          </a>
-          <div className="hidden items-center gap-[31px] sm:flex">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                className="group relative py-[5px] font-body text-[16px] tracking-[-0.32px] text-sw-cream"
-              >
-                {link.label}
-                <span className="absolute -bottom-[2px] left-0 h-px w-0 bg-sw-cream transition-all duration-200 group-hover:w-full" />
-              </a>
-            ))}
-            <button aria-label="Search" className="h-[34px] w-[24px]">
-              <img src="/icons/search.svg" alt="" className="h-full w-full" />
-            </button>
-            <button aria-label="Bag" className="h-[32px] w-[25px]">
-              <img src="/icons/bag.svg" alt="" className="h-full w-full" />
-            </button>
-          </div>
-          <div className="flex items-center gap-4 sm:hidden">
-            <button aria-label="Search" className="h-[28px] w-[20px]">
-              <img src="/icons/search.svg" alt="" className="h-full w-full" />
-            </button>
-            <button aria-label="Bag" className="h-[26px] w-[20px]">
-              <img src="/icons/bag.svg" alt="" className="h-full w-full" />
-            </button>
-          </div>
-        </nav>
+      {/* Nav — its own full-width strip (321:1137), edge-to-edge, no inset box.
+          Hover fills this ENTIRE strip, matching Figma's Variant2 exactly. */}
+      <nav className="relative flex w-full items-center justify-between px-6 pb-[5px] pt-6 transition-colors duration-200 hover:bg-[rgba(255,178,166,0.2)] sm:px-10 lg:px-[70px] lg:pb-[5px] lg:pt-[50px]">
+        <a href="/" className="block h-[26px] w-[160px] sm:h-[31px] sm:w-[197px]">
+          <img
+            src="/icons/logo-lockup.svg"
+            alt="Shaby Wurld"
+            className="h-full w-full mix-blend-plus-lighter"
+          />
+        </a>
+        <div className="hidden items-center gap-[31px] sm:flex">
+          {NAV_LINKS.map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              className="group relative py-[5px] font-body text-[16px] tracking-[-0.32px] text-sw-cream"
+            >
+              {link.label}
+              <span className="absolute -bottom-[2px] left-0 h-px w-0 bg-sw-cream transition-all duration-200 group-hover:w-full" />
+            </a>
+          ))}
+          <button aria-label="Search" className="h-[34px] w-[24px]">
+            <img src="/icons/search.svg" alt="" className="h-full w-full" />
+          </button>
+          <button aria-label="Bag" className="h-[32px] w-[25px]">
+            <img src="/icons/bag.svg" alt="" className="h-full w-full" />
+          </button>
+        </div>
+        <div className="flex items-center gap-4 sm:hidden">
+          <button aria-label="Search" className="h-[28px] w-[20px]">
+            <img src="/icons/search.svg" alt="" className="h-full w-full" />
+          </button>
+          <button aria-label="Bag" className="h-[26px] w-[20px]">
+            <img src="/icons/bag.svg" alt="" className="h-full w-full" />
+          </button>
+        </div>
+      </nav>
 
-        {/* Headline block — extra inset beyond the nav's edge padding (~4x at desktop) */}
+      {/* Headline block — 2.5x nav margin (70px -> 175px) */}
+      <div className="relative flex w-full flex-1 flex-col px-6 pb-10 sm:px-10 lg:px-[70px]">
         <div className="flex w-full flex-1 flex-col items-center justify-center gap-16 px-4 sm:px-14 lg:flex-row lg:items-start lg:justify-between lg:gap-[730px] lg:px-[175px]">
           <div className="text-center font-body text-[16px] text-white sm:text-[18px] lg:pt-[300px] lg:text-left">
             <p>Beauty that</p>
