@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Canela Text Light -- supplied by the client as a *Trial* font package.
+  Trial fonts from type foundries are almost always licensed for testing
+  and mockups only, not for a live public site. Before this ships to
+  production, confirm a proper web license has been purchased from the
+  foundry (Colophon) -- otherwise swap this @font-face for a licensed file
+  with the same filename and nothing else needs to change.
+*/
+@font-face {
+  font-family: "Canela Trial";
+  src: url("/fonts/Canela-Light-Trial.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
