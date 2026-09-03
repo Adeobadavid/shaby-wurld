@@ -45,12 +45,29 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
     };
   }, [hovered, product.images.length]);
 
+  const handleOpenQuickView = () => {
+    openQuickView({
+      id: product.id,
+      category: product.category,
+      name: product.name,
+      description:
+        product.description ??
+        "Rich pigments, glass-like shine, and shades designed to flatter deeper skin tones.",
+      price: product.priceValue,
+      image: product.images[0],
+    });
+  };
+
   return (
     <div
       data-figma-node="322:1741"
-      className="flex w-full flex-col items-start gap-[14px] bg-[#f6f3f3]"
+      role="button"
+      tabIndex={0}
+      onClick={handleOpenQuickView}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleOpenQuickView()}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      className="flex w-full cursor-pointer flex-col items-start gap-[14px] bg-[#f6f3f3] transition-transform active:scale-[0.98]"
     >
       {/* Slide dots — always 3, matching Figma's fixed layout. Only real
           images actually cycle; unused dots stay in the default/inactive
@@ -66,7 +83,10 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
         ))}
       </div>
 
-      {/* Image + hover overlay */}
+      {/* Image + Quick view affordance. Hover-reveal on desktop (mouse
+          devices); always visible on touch screens since there's no
+          hover state to reveal it there — the whole card is tappable
+          either way, this is just the visual label. */}
       <div className="relative flex h-[486px] w-full items-center justify-center px-[15px]">
         <div className="relative flex h-[425px] w-[350px] items-center justify-center overflow-hidden">
           <Image
@@ -77,25 +97,17 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
             className="object-cover transition-opacity duration-300"
           />
         </div>
-        {hovered && (
-          <button
-            onClick={() =>
-              openQuickView({
-                id: product.id,
-                category: product.category,
-                name: product.name,
-                description:
-                  product.description ??
-                  "Rich pigments, glass-like shine, and shades designed to flatter deeper skin tones.",
-                price: product.priceValue,
-                image: product.images[0],
-              })
-            }
-            className="absolute bottom-[15px] left-[25px] right-[25px] flex h-[50px] items-center justify-center bg-sw-blush font-body text-[16px] text-sw-cream transition-colors hover:bg-[#95402f]"
-          >
-            Quick view
-          </button>
-        )}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleOpenQuickView();
+          }}
+          className={`absolute bottom-[15px] left-[25px] right-[25px] flex h-[50px] items-center justify-center bg-sw-blush font-body text-[16px] text-sw-cream transition-opacity duration-200 hover:bg-[#95402f] sm:opacity-0 ${
+            hovered ? "sm:opacity-100" : ""
+          }`}
+        >
+          Quick view
+        </button>
       </div>
 
       {/* Info */}
