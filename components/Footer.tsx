@@ -26,10 +26,10 @@ function FooterColumn({ title, links }: { title: string; links: string[] }) {
 
 export default function Footer() {
   return (
-    <footer data-figma-node="265:1220" className="flex w-full flex-col items-center">
+    <footer id="contact" data-figma-node="265:1220" className="flex w-full flex-col items-center">
       <div className="flex w-full flex-col items-start gap-[50px] bg-[#f7eeeb] pt-[35px]">
         <div className="flex w-full flex-col items-start gap-8 px-6 sm:px-10 lg:gap-5 lg:px-[60px]">
-          <img src="/icons/logo-lockup.svg" alt="Shaby Wurld" className="h-[26px] w-[135px]" />
+          <img src="/icons/logo-text.webp" alt="Shaby Wurld" className="h-[26px] w-auto" />
 
           <div className="flex w-full flex-col gap-10 text-[14px] text-[#81716e] lg:flex-row lg:justify-between">
             <div className="flex flex-col justify-center gap-[35px] font-body">

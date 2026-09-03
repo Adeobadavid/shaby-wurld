@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useCart } from "@/lib/cart-context";
 
 /**
  * Product card — Figma node 322:1741 (Default/Variant2 hover states).
@@ -18,6 +19,8 @@ export type ProductCardData = {
   category: string;
   name: string;
   price: string;
+  priceValue: number;
+  description?: string;
 };
 
 const SLIDE_DELAY_MS = 1400;
@@ -26,6 +29,7 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
   const [index, setIndex] = useState(0);
   const [hovered, setHovered] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { openQuickView } = useCart();
 
   useEffect(() => {
     if (hovered && product.images.length > 1) {
@@ -74,7 +78,21 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
           />
         </div>
         {hovered && (
-          <button className="absolute bottom-[15px] left-[25px] right-[25px] flex h-[50px] items-center justify-center bg-sw-blush font-body text-[16px] text-sw-cream transition-colors hover:bg-[#95402f]">
+          <button
+            onClick={() =>
+              openQuickView({
+                id: product.id,
+                category: product.category,
+                name: product.name,
+                description:
+                  product.description ??
+                  "Rich pigments, glass-like shine, and shades designed to flatter deeper skin tones.",
+                price: product.priceValue,
+                image: product.images[0],
+              })
+            }
+            className="absolute bottom-[15px] left-[25px] right-[25px] flex h-[50px] items-center justify-center bg-sw-blush font-body text-[16px] text-sw-cream transition-colors hover:bg-[#95402f]"
+          >
             Quick view
           </button>
         )}

@@ -5,10 +5,13 @@ import PerfectLiner from "@/components/PerfectLiner";
 import BrandStory from "@/components/BrandStory";
 import Reviews from "@/components/Reviews";
 import Footer from "@/components/Footer";
+import QuickView from "@/components/QuickView";
+import BagDrawer from "@/components/BagDrawer";
+import CheckoutDrawer from "@/components/CheckoutDrawer";
 
 export default function Home() {
   return (
-    <main>
+    <main className="relative">
       <Hero />
       <Benefits />
       <BestSellers />
@@ -16,6 +19,10 @@ export default function Home() {
       <BrandStory />
       <Reviews />
       <Footer />
+
+      <QuickView />
+      <BagDrawer />
+      <CheckoutDrawer />
     </main>
   );
 }
