@@ -35,13 +35,14 @@ export default async function OrderConfirmation({
   const order = paid ? await getOrderForReceipt(reference) : null;
 
   if (paid && order) {
+    // #fbf7f5 is the same warm ground the Brand Story section sits on.
     return (
-      <main className="flex min-h-dvh flex-col items-center bg-[#efece9] px-5 py-10 sm:py-16">
-        <h1 className="mb-8 text-center font-display text-[30px] leading-[1.15] text-black sm:text-[38px]">
+      <main className="flex min-h-dvh flex-col items-center bg-[#fbf7f5] px-5 py-10 sm:py-16">
+        <h1 className="mb-8 text-center font-display text-[30px] leading-[1.15] text-[#262626] sm:text-[38px]">
           Thank you.
         </h1>
         <Receipt order={order} />
-        <p className="mt-8 max-w-[380px] text-center font-body text-[14px] leading-[1.5] text-[#7a7270]">
+        <p className="mt-8 max-w-[380px] text-center font-body text-[14px] leading-[1.5] text-[#a79b99]">
           We&apos;ll message you on WhatsApp shortly to confirm delivery details.
         </p>
       </main>

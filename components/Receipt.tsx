@@ -11,8 +11,18 @@ import Link from "next/link";
  * above it on the z-axis — nothing is clipped, which keeps the paper fully
  * present in the DOM for html2canvas when saving.
  *
- * Everything shown here comes from the server-verified order. The component
- * never decides that anything was paid.
+ * Colour and type come from the site's system, not from generic receipt
+ * conventions:
+ *   housing   sw-blush + sw-cream, the same pairing as the footer bar and
+ *             the Add to Bag buttons
+ *   rules     #edcac3, the divider used throughout the cart drawer
+ *   labels    #a79b99, the muted warm grey used for every field label
+ *   body      #3d3d3d / #262626, the site's text greys
+ *   totals    font-display, matching how prices are set on product cards
+ *
+ * No monospace: the site has none, and the receipt reads as a receipt through
+ * its dotted rules, torn edge and barcode. Figures use tabular-nums so columns
+ * still align.
  */
 
 export type ReceiptData = {
@@ -25,18 +35,16 @@ export type ReceiptData = {
   paidAt?: string;
 };
 
-const naira = (n: number) => `NGN ${n.toLocaleString()}.00`;
+const naira = (n: number) => `₦${n.toLocaleString()}.00`;
 
 export default function Receipt({ order }: { order: ReceiptData }) {
   const paperRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState<"png" | "pdf" | null>(null);
 
   const date = order.paidAt ? new Date(order.paidAt) : new Date();
-  const stamp = `${date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).toUpperCase()} · ${date.toLocaleTimeString("en-GB", {
+  const stamp = `${date
+    .toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+    .toUpperCase()} · ${date.toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
   })}`;
@@ -105,45 +113,49 @@ export default function Receipt({ order }: { order: ReceiptData }) {
 
   return (
     <div className="flex w-full max-w-[420px] flex-col items-center">
-      {/* Printer housing — sits above the paper so the paper emerges from
-          beneath its lower edge. */}
-      <div className="sw-printer-body relative z-20 w-full rounded-[18px] bg-[#1c1a1a] p-4 shadow-[0_18px_40px_-20px_rgba(0,0,0,0.6)]">
+      {/* Printer housing — blush on cream, the same pairing as the footer bar.
+          Sits above the paper so the paper emerges from beneath its edge. */}
+      <div className="sw-printer-body relative z-20 w-full bg-sw-blush p-4 shadow-[0_18px_40px_-22px_rgba(150,64,47,0.55)]">
         <div className="mb-3 flex items-center justify-between">
-          <img src="/icons/logo-text.webp" alt="Shaby Wurld" className="h-4 w-auto invert" />
+          <img
+            src="/icons/logo-lockup.svg"
+            alt="Shaby Wurld"
+            className="h-[18px] w-auto"
+          />
           <Link
             href="/"
-            className="rounded-full bg-white/10 px-3 py-1 font-body text-[12px] text-white/80 transition-colors hover:bg-white/20"
+            className="border border-sw-cream/40 px-3 py-1 font-body text-[12px] text-sw-cream transition-colors duration-300 hover:bg-sw-cream hover:text-sw-blush"
           >
             Home
           </Link>
         </div>
 
-        <div className="rounded-[12px] bg-[#2a2726] p-4">
+        <div className="bg-[#95402f] p-4">
           <div className="flex items-start justify-between">
             <div>
-              <p className="font-body text-[15px] font-medium text-white">Shaby Wurld</p>
-              <p className="font-body text-[12px] text-white/50">
+              <p className="font-body text-[15px] font-medium text-sw-cream">Shaby Wurld</p>
+              <p className="font-body text-[12px] text-sw-cream/70">
                 {order.items.length} item{order.items.length === 1 ? "" : "s"}
               </p>
             </div>
             <div className="text-right">
-              <p className="font-body text-[11px] text-white/50">Total</p>
-              <p className="font-body text-[16px] font-medium text-white">
-                ₦{order.total.toLocaleString()}
+              <p className="font-body text-[11px] text-sw-cream/70">Total</p>
+              <p className="font-display text-[18px] tabular-nums text-sw-cream">
+                {naira(order.total)}
               </p>
             </div>
           </div>
 
           <div className="mt-3 flex items-center gap-2">
-            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#4ade80] text-[10px] text-[#1c1a1a]">
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-sw-cream text-[10px] leading-none text-[#95402f]">
               ✓
             </span>
-            <p className="font-body text-[13px] text-white/85">Order complete</p>
+            <p className="font-body text-[13px] text-sw-cream/90">Order complete</p>
           </div>
         </div>
 
         {/* The slot */}
-        <div className="mx-auto mt-4 h-[5px] w-[92%] rounded-full bg-black/70" />
+        <div className="mx-auto mt-4 h-[5px] w-[92%] bg-[#95402f]" />
       </div>
 
       {/* Paper */}
@@ -154,62 +166,68 @@ export default function Receipt({ order }: { order: ReceiptData }) {
               <img src="/icons/logo-text.webp" alt="Shaby Wurld" className="h-5 w-auto" />
             </div>
 
-            <div className="border-t border-dashed border-[#c9c4c2]" />
+            <div className="border-t border-dashed border-[#edcac3]" />
 
             {/* Items */}
             <div className="py-4">
               {order.items.map((item, i) => (
                 <div key={i} className="mb-3 flex items-baseline justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate font-mono text-[11px] uppercase tracking-tight text-[#2b2b2b]">
-                      {item.qty} × {item.name}
+                    <p className="font-body text-[13px] leading-[1.35] text-[#262626]">
+                      <span className="tabular-nums text-[#a79b99]">{item.qty}×</span>{" "}
+                      {item.name}
                     </p>
                     {item.shade && (
-                      <p className="font-mono text-[10px] text-[#8a8a8a]">{item.shade}</p>
+                      <p className="font-body text-[12px] text-[#a79b99]">{item.shade}</p>
                     )}
                   </div>
-                  <p className="shrink-0 font-mono text-[11px] text-[#2b2b2b]">
+                  <p className="shrink-0 font-body text-[13px] tabular-nums text-[#3d3d3d]">
                     {naira(item.unitPrice * item.qty)}
                   </p>
                 </div>
               ))}
             </div>
 
-            <div className="border-t border-dashed border-[#c9c4c2]" />
+            <div className="border-t border-dashed border-[#edcac3]" />
 
             {/* Totals */}
-            <div className="py-4 font-mono text-[11px] text-[#2b2b2b]">
+            <div className="py-4 font-body text-[13px] text-[#3d3d3d]">
               <div className="mb-1 flex justify-between">
-                <span>Subtotal</span>
-                <span>{naira(order.subtotal)}</span>
+                <span className="text-[#a79b99]">Subtotal</span>
+                <span className="tabular-nums">{naira(order.subtotal)}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Delivery{order.courier ? ` (${order.courier})` : ""}</span>
-                <span>{order.shippingCost === 0 ? "FREE" : naira(order.shippingCost)}</span>
+              <div className="flex justify-between gap-3">
+                <span className="text-[#a79b99]">
+                  Delivery{order.courier ? ` · ${order.courier}` : ""}
+                </span>
+                <span className="shrink-0 tabular-nums">
+                  {order.shippingCost === 0 ? "Free" : naira(order.shippingCost)}
+                </span>
               </div>
             </div>
 
-            <div className="border-t border-dashed border-[#c9c4c2]" />
+            <div className="border-t border-dashed border-[#edcac3]" />
 
             <div className="flex items-baseline justify-between py-4">
-              <p className="font-mono text-[13px] font-semibold uppercase text-[#1c1a1a]">
+              <p className="font-body text-[13px] font-medium uppercase tracking-[0.28px] text-[#a79b99]">
                 Total Paid
               </p>
-              <p className="font-mono text-[17px] font-semibold text-[#1c1a1a]">
+              {/* font-display, the way prices are set on product cards */}
+              <p className="font-display text-[24px] tabular-nums text-[#262626]">
                 {naira(order.total)}
               </p>
             </div>
 
-            <div className="border-t border-dashed border-[#c9c4c2]" />
+            <div className="border-t border-dashed border-[#edcac3]" />
 
             {/* Meta */}
-            <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 py-4 font-mono text-[10px] text-[#8a8a8a]">
+            <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-[6px] py-4 font-body text-[11px] text-[#a79b99]">
               <span>Order</span>
-              <span className="text-right text-[#2b2b2b]">{order.orderNumber}</span>
+              <span className="text-right tabular-nums text-[#3d3d3d]">{order.orderNumber}</span>
               <span>Paid with</span>
-              <span className="text-right text-[#2b2b2b]">Paystack</span>
+              <span className="text-right text-[#3d3d3d]">Paystack</span>
               <span>Date</span>
-              <span className="text-right text-[#2b2b2b]">{stamp}</span>
+              <span className="text-right tabular-nums text-[#3d3d3d]">{stamp}</span>
             </div>
 
             {/* Barcode — CSS stripes rather than a library, since it is
@@ -220,10 +238,10 @@ export default function Receipt({ order }: { order: ReceiptData }) {
                 aria-hidden="true"
                 style={{
                   backgroundImage:
-                    "repeating-linear-gradient(90deg,#1c1a1a 0 2px,transparent 2px 4px,#1c1a1a 4px 5px,transparent 5px 9px,#1c1a1a 9px 12px,transparent 12px 14px)",
+                    "repeating-linear-gradient(90deg,#262626 0 2px,transparent 2px 4px,#262626 4px 5px,transparent 5px 9px,#262626 9px 12px,transparent 12px 14px)",
                 }}
               />
-              <p className="mt-2 font-mono text-[9px] tracking-[0.3em] text-[#8a8a8a]">
+              <p className="mt-2 font-body text-[10px] tracking-[0.3em] text-[#a79b99]">
                 {order.orderNumber.replace(/-/g, " ")}
               </p>
             </div>
@@ -234,19 +252,19 @@ export default function Receipt({ order }: { order: ReceiptData }) {
         </div>
       </div>
 
-      {/* Actions */}
+      {/* Actions — same shapes as Add to Bag / secondary buttons elsewhere */}
       <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row">
         <button
           onClick={saveImage}
           disabled={saving !== null}
-          className="flex h-[46px] flex-1 items-center justify-center gap-2 bg-sw-blush font-body text-[15px] text-sw-cream transition-colors duration-300 hover:bg-[#95402f] disabled:opacity-50"
+          className="flex h-[50px] flex-1 items-center justify-center bg-sw-blush font-body text-[16px] text-sw-cream transition-colors duration-300 hover:bg-[#95402f] active:scale-[0.99] disabled:opacity-50"
         >
           {saving === "png" ? "Saving…" : "Save as image"}
         </button>
         <button
           onClick={savePdf}
           disabled={saving !== null}
-          className="flex h-[46px] flex-1 items-center justify-center gap-2 border border-[#ddd5d4] bg-white font-body text-[15px] text-[#3d3d3d] transition-colors duration-300 hover:border-sw-blush disabled:opacity-50"
+          className="flex h-[50px] flex-1 items-center justify-center border border-[#ddd5d4] bg-white font-body text-[16px] text-[#3d3d3d] transition-colors duration-300 hover:border-sw-blush disabled:opacity-50"
         >
           {saving === "pdf" ? "Saving…" : "Save as PDF"}
         </button>
@@ -254,7 +272,7 @@ export default function Receipt({ order }: { order: ReceiptData }) {
 
       <Link
         href="/"
-        className="mt-5 font-body text-[14px] text-[#a79b99] underline transition-colors hover:text-sw-blush"
+        className="mt-5 font-body text-[14px] text-[#a79b99] underline transition-colors duration-200 hover:text-sw-blush"
       >
         Continue shopping
       </Link>
