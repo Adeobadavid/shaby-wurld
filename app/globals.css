@@ -203,24 +203,35 @@ html {
   50% { transform: translateX(0.6px); }
 }
 
-/* Torn edge: a row of triangles masked out of the paper's bottom. */
-.sw-receipt-tear {
-  height: 10px;
-  background: inherit;
-  mask-image: repeating-linear-gradient(
-    -45deg,
-    #000 0 6px,
-    transparent 6px 12px
-  );
-  mask-size: 12px 20px;
-  mask-repeat: repeat-x;
-  -webkit-mask-image: repeating-linear-gradient(
-    -45deg,
-    #000 0 6px,
-    transparent 6px 12px
-  );
-  -webkit-mask-size: 12px 20px;
-  -webkit-mask-repeat: repeat-x;
+/* While exporting, the paper must sit at its natural position with nothing
+   clipping it — a transformed or clipped node exports blank. */
+.sw-capturing .sw-receipt-paper {
+  animation: none !important;
+  transform: none !important;
+}
+
+.sw-capturing {
+  overflow: visible !important;
+}
+
+/* Ticket notches — half-circles bitten out of both paper edges. Filled with
+   the page ground so they read as holes rather than dots. */
+.sw-notch {
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #fbf7f5;
+  transform: translateY(-50%);
+}
+
+.sw-notch-left {
+  left: -9px;
+}
+
+.sw-notch-right {
+  right: -9px;
 }
 
 @media (prefers-reduced-motion: reduce) {

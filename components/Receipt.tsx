@@ -9,7 +9,7 @@ import Link from "next/link";
  * The paper starts translated fully behind the printer housing and is pushed
  * down into view, so it reads as being fed out of the slot. The housing sits
  * above it on the z-axis — nothing is clipped, which keeps the paper fully
- * present in the DOM for html2canvas when saving.
+ * present in the DOM when exporting.
  *
  * Colour and type come from the site's system, not from generic receipt
  * conventions:
@@ -37,8 +37,34 @@ export type ReceiptData = {
 
 const naira = (n: number) => `₦${n.toLocaleString()}.00`;
 
+/** Zigzag torn edge, drawn as an SVG path so it renders and exports reliably. */
+function TornEdge() {
+  const teeth = 24;
+  const width = 240;
+  const height = 9;
+  const toothWidth = width / teeth;
+
+  let d = `M0 0 H${width} `;
+  for (let i = teeth; i > 0; i--) {
+    d += `L${((i - 0.5) * toothWidth).toFixed(2)} ${height} L${((i - 1) * toothWidth).toFixed(2)} 0 `;
+  }
+  d += "Z";
+
+  return (
+    <svg
+      className="block h-[9px] w-full"
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <path d={d} fill="#ffffff" />
+    </svg>
+  );
+}
+
 export default function Receipt({ order }: { order: ReceiptData }) {
   const paperRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState<"png" | "pdf" | null>(null);
 
   const date = order.paidAt ? new Date(order.paidAt) : new Date();
@@ -50,30 +76,45 @@ export default function Receipt({ order }: { order: ReceiptData }) {
   })}`;
 
   /**
-   * Both exports render the DOM node to a canvas. The libraries are imported
-   * lazily so ~200 KB never loads for anyone who doesn't tap save.
+   * Render the paper to a PNG data URL.
+   *
+   * The earlier html2canvas version exported a blank white image: the paper
+   * carries an animation transform and its wrapper clips overflow, and
+   * html2canvas measures the transformed, clipped box. So the node is pinned
+   * to its natural position first (via .sw-capturing), and html-to-image is
+   * used instead — it serialises the DOM through an SVG foreignObject, which
+   * handles transforms and masks far more predictably.
    */
-  async function capture() {
+  async function capture(): Promise<string | null> {
     const node = paperRef.current;
-    if (!node) return null;
+    const wrapper = wrapperRef.current;
+    if (!node || !wrapper) return null;
 
-    const { default: html2canvas } = await import("html2canvas");
-    return html2canvas(node, {
-      backgroundColor: "#ffffff",
-      scale: 2, // legible on a retina screen and when printed
-      useCORS: true,
-    });
+    wrapper.classList.add("sw-capturing");
+    // Let the class take effect before measuring.
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+    try {
+      const { toPng } = await import("html-to-image");
+      return await toPng(node, {
+        pixelRatio: 2, // legible on retina and when printed
+        backgroundColor: "#fbf7f5", // matches the notch fill
+        cacheBust: true,
+      });
+    } finally {
+      wrapper.classList.remove("sw-capturing");
+    }
   }
 
   async function saveImage() {
     setSaving("png");
     try {
-      const canvas = await capture();
-      if (!canvas) return;
+      const dataUrl = await capture();
+      if (!dataUrl) return;
 
       const link = document.createElement("a");
       link.download = `${order.orderNumber}.png`;
-      link.href = canvas.toDataURL("image/png");
+      link.href = dataUrl;
       link.click();
     } catch (error) {
       console.error("[receipt] png export failed", error);
@@ -85,24 +126,24 @@ export default function Receipt({ order }: { order: ReceiptData }) {
   async function savePdf() {
     setSaving("pdf");
     try {
-      const canvas = await capture();
-      if (!canvas) return;
+      const dataUrl = await capture();
+      if (!dataUrl) return;
+
+      // Measure the rendered PNG so the PDF page matches it exactly and
+      // there are no margins around the receipt.
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = dataUrl;
+      });
+
+      const w = img.width / 2;
+      const h = img.height / 2;
 
       const { jsPDF } = await import("jspdf");
-      // Page matches the receipt's aspect ratio, so there are no margins.
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "px",
-        format: [canvas.width / 2, canvas.height / 2],
-      });
-      pdf.addImage(
-        canvas.toDataURL("image/png"),
-        "PNG",
-        0,
-        0,
-        canvas.width / 2,
-        canvas.height / 2
-      );
+      const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [w, h] });
+      pdf.addImage(dataUrl, "PNG", 0, 0, w, h);
       pdf.save(`${order.orderNumber}.pdf`);
     } catch (error) {
       console.error("[receipt] pdf export failed", error);
@@ -154,13 +195,15 @@ export default function Receipt({ order }: { order: ReceiptData }) {
           </div>
         </div>
 
-        {/* The slot */}
-        <div className="mx-auto mt-4 h-[5px] w-[92%] bg-[#95402f]" />
+        {/* The slot, flush with the housing's bottom edge so the paper
+            genuinely emerges from this opening rather than from below the
+            whole box. */}
+        <div className="-mx-4 -mb-4 mt-4 h-[7px] bg-[#7d3526] shadow-[inset_0_2px_3px_rgba(0,0,0,0.35)]" />
       </div>
 
-      {/* Paper */}
-      <div className="relative z-10 -mt-[3px] w-[88%] overflow-hidden">
-        <div ref={paperRef} className="sw-receipt-paper bg-white">
+      {/* Paper — tucked directly under the slot */}
+      <div ref={wrapperRef} className="relative z-10 -mt-[2px] w-[88%] overflow-hidden">
+        <div ref={paperRef} className="sw-receipt-paper relative bg-white">
           <div className="px-6 pb-5 pt-7">
             <div className="mb-5 flex justify-center">
               <img src="/icons/logo-text.webp" alt="Shaby Wurld" className="h-5 w-auto" />
@@ -206,7 +249,12 @@ export default function Receipt({ order }: { order: ReceiptData }) {
               </div>
             </div>
 
-            <div className="border-t border-dashed border-[#edcac3]" />
+            {/* Ticket notches sit on this rule, the way a real receipt is
+                perforated above the total. */}
+            <div className="relative border-t border-dashed border-[#edcac3]">
+              <span className="sw-notch sw-notch-left" aria-hidden="true" />
+              <span className="sw-notch sw-notch-right" aria-hidden="true" />
+            </div>
 
             <div className="flex items-baseline justify-between py-4">
               <p className="font-body text-[13px] font-medium uppercase tracking-[0.28px] text-[#a79b99]">
@@ -248,12 +296,14 @@ export default function Receipt({ order }: { order: ReceiptData }) {
           </div>
 
           {/* Torn bottom edge */}
-          <div className="sw-receipt-tear bg-white" />
+          <TornEdge />
         </div>
       </div>
 
-      {/* Actions — same shapes as Add to Bag / secondary buttons elsewhere */}
-      <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row">
+      {/* Actions — same shapes as Add to Bag / secondary buttons elsewhere.
+          Constrained to the paper's width so they sit inset on mobile rather
+          than running edge to edge. */}
+      <div className="mt-8 flex w-[88%] flex-col gap-3 sm:w-full sm:flex-row">
         <button
           onClick={saveImage}
           disabled={saving !== null}
