@@ -15,16 +15,36 @@ paste a secret key into a chat or screenshot.
 ## 2. Sanity
 
 The schemas are already in this repo, so **do not run `npm create sanity`** —
-it would scaffold a second, competing project. The Studio is embedded here
-instead.
+it would scaffold a second, competing project.
 
-1. Start the app: `npm run dev`
-2. Open <http://localhost:3000/studio> and log in.
-3. Sanity will ask to add `http://localhost:3000` as a CORS origin — allow it.
-   Add your production domain the same way at
-   <https://sanity.io/manage> → project `l1gq8pzc` → API → CORS origins.
-4. Create a **write token**: same page → Tokens → Add token → **Editor**.
-   Paste it into `SANITY_API_WRITE_TOKEN`.
+The Studio is **not** part of the Next.js app. It is hosted free by Sanity at
+<https://shabywurld.sanity.studio>, because embedding it added 4.7 MB to the
+Cloudflare Worker bundle and pushed it past the free plan's 3 MB limit, for a
+page only you ever open.
+
+Deploy it (needs a browser login, so run these yourself):
+
+```bash
+npx sanity login
+npx sanity deploy
+```
+
+Re-run `npx sanity deploy` whenever a schema changes.
+
+You need **two tokens**, both from
+<https://sanity.io/manage> → project `l1gq8pzc` → API → Tokens:
+
+| Token | Role | Why |
+|---|---|---|
+| `SANITY_API_WRITE_TOKEN` | Editor | Records orders. **Required — do not delete.** |
+| `SANITY_API_READ_TOKEN` | Viewer | Renders the site now the dataset is private. |
+
+Keep them separate. Page rendering only ever needs to read, so giving it write
+access would widen the damage any future bug could do. The site falls back to
+the write token if the read token is missing, but warns — that is a stopgap,
+not the intended setup.
+
+Run locally with `npm run dev` (<http://localhost:3000>).
 
 Then fill in **Site Settings** (it's a singleton, opens directly), add
 **Products**, and add **Reviews**.

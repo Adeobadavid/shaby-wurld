@@ -37,6 +37,10 @@ npx wrangler secret put PAYSTACK_SECRET_KEY
 npx wrangler secret put SHIPBUBBLE_API_KEY
 ```
 
+Both Sanity tokens are needed and do different jobs: the **write** token
+records orders, the **read** token renders the site now that the dataset is
+private. Neither replaces the other.
+
 Each prompts for the value — nothing is echoed or written to disk.
 
 The public (`NEXT_PUBLIC_*`) values are baked in at build time from
@@ -96,9 +100,10 @@ throttling. It is not an authorisation control and isn't used as one.
 has nowhere to store output, so every visit re-renders and re-queries Sanity —
 slower, and it burns your Sanity request quota.
 
-**Studio adds ~1.7 MB to the bundle.** Fine on Workers' paid plan. If you hit
-the free plan's 3 MB compressed limit, move the Studio to its own deploy
-(`npx sanity deploy`) and delete `app/studio/`.
+**The Studio is deliberately not in this app.** Embedding it made the Worker
+4.13 MB compressed, over the free plan's 3 MB limit. It now lives at
+<https://shabywurld.sanity.studio>, hosted free by Sanity, and is redeployed
+with `npx sanity deploy` whenever a schema changes.
 
 ## Before taking real money
 

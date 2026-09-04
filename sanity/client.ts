@@ -20,8 +20,33 @@ export const client = createClient({
   apiVersion,
   useCdn: true,
   perspective: "published",
-  token: typeof window === "undefined" ? process.env.SANITY_API_READ_TOKEN : undefined,
+  token: typeof window === "undefined" ? readToken() : undefined,
 });
+
+/**
+ * The dataset is private, so reads need a token.
+ *
+ * A dedicated Viewer token is strongly preferred: page rendering only ever
+ * needs to read, and handing it write access widens the blast radius of any
+ * future bug that can influence a query. The write token is accepted as a
+ * fallback purely so the site does not go dark while that token is being
+ * created — it warns loudly rather than failing silently.
+ */
+function readToken(): string | undefined {
+  const read = process.env.SANITY_API_READ_TOKEN;
+  if (read) return read;
+
+  const write = process.env.SANITY_API_WRITE_TOKEN;
+  if (write) {
+    console.warn(
+      "[sanity] SANITY_API_READ_TOKEN is not set — falling back to the write token. " +
+        "Create a Viewer token and set SANITY_API_READ_TOKEN."
+    );
+    return write;
+  }
+
+  return undefined;
+}
 
 /**
  * Write client — SERVER ONLY.

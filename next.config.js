@@ -15,6 +15,10 @@ const securityHeaders = [
 ];
 
 const nextConfig = {
+  // Stray package-lock.json files sit above this directory, and without this
+  // Next infers the wrong workspace root and traces the wrong files.
+  outputFileTracingRoot: __dirname,
+
   // NOTE: `output: 'export'` was removed deliberately. A static export has no
   // server, so it cannot hold the Paystack secret key, verify a webhook
   // signature, or proxy Shipbubble without exposing that key in the browser.
