@@ -39,9 +39,11 @@ const naira = (n: number) => `₦${n.toLocaleString()}.00`;
 
 /** Zigzag torn edge, drawn as an SVG path so it renders and exports reliably. */
 function TornEdge() {
-  const teeth = 24;
+  // Fewer, deeper teeth read better than many shallow ones, especially
+  // against a near-white ground.
+  const teeth = 16;
   const width = 240;
-  const height = 9;
+  const height = 13;
   const toothWidth = width / teeth;
 
   let d = `M0 0 H${width} `;
@@ -52,7 +54,7 @@ function TornEdge() {
 
   return (
     <svg
-      className="block h-[9px] w-full"
+      className="block h-[13px] w-full"
       viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="none"
       aria-hidden="true"
@@ -155,8 +157,8 @@ export default function Receipt({ order }: { order: ReceiptData }) {
   return (
     <div className="flex w-full max-w-[420px] flex-col items-center">
       {/* Printer housing — blush on cream, the same pairing as the footer bar.
-          Sits above the paper so the paper emerges from beneath its edge. */}
-      <div className="sw-printer-body relative z-20 w-full bg-sw-blush p-4 shadow-[0_18px_40px_-22px_rgba(150,64,47,0.55)]">
+          Sits above the paper so the paper emerges from its cutout. */}
+      <div className="sw-printer-body relative z-20 w-full rounded-[16px] bg-sw-blush p-4 pb-[10px] shadow-[0_18px_40px_-22px_rgba(150,64,47,0.55)]">
         <div className="mb-3 flex items-center justify-between">
           <img
             src="/icons/logo-lockup.svg"
@@ -171,7 +173,7 @@ export default function Receipt({ order }: { order: ReceiptData }) {
           </Link>
         </div>
 
-        <div className="bg-[#95402f] p-4">
+        <div className="rounded-[10px] bg-[#95402f] p-4">
           <div className="flex items-start justify-between">
             <div>
               <p className="font-body text-[15px] font-medium text-sw-cream">Shaby Wurld</p>
@@ -195,15 +197,21 @@ export default function Receipt({ order }: { order: ReceiptData }) {
           </div>
         </div>
 
-        {/* The slot, flush with the housing's bottom edge so the paper
-            genuinely emerges from this opening rather than from below the
-            whole box. */}
-        <div className="-mx-4 -mb-4 mt-4 h-[7px] bg-[#7d3526] shadow-[inset_0_2px_3px_rgba(0,0,0,0.35)]" />
+        {/* The cutout: a dark recess inset from the housing's edges, with the
+            housing's rounded bottom still visible around it — the paper comes
+            up through this opening, not from under the whole box. */}
+        <div className="mx-auto mt-5 h-[11px] w-[94%] rounded-[3px] bg-[#4a1c13] shadow-[inset_0_3px_6px_rgba(0,0,0,0.55)]" />
       </div>
 
-      {/* Paper — tucked directly under the slot */}
-      <div ref={wrapperRef} className="relative z-10 -mt-[2px] w-[88%] overflow-hidden">
-        <div ref={paperRef} className="sw-receipt-paper relative bg-white">
+      {/* Paper.
+          The clipping wrapper is FULL width while the paper inside is 86%, so
+          the edge notches have room and are not clipped away — that was why
+          they rendered as odd dots rather than bites. */}
+      <div ref={wrapperRef} className="relative z-10 -mt-[13px] w-full overflow-hidden">
+        <div
+          ref={paperRef}
+          className="sw-receipt-paper relative mx-auto w-[86%] bg-white drop-shadow-[0_6px_10px_rgba(96,52,40,0.16)]"
+        >
           <div className="px-6 pb-5 pt-7">
             <div className="mb-5 flex justify-center">
               <img src="/icons/logo-text.webp" alt="Shaby Wurld" className="h-5 w-auto" />
@@ -300,21 +308,22 @@ export default function Receipt({ order }: { order: ReceiptData }) {
         </div>
       </div>
 
-      {/* Actions — same shapes as Add to Bag / secondary buttons elsewhere.
-          Constrained to the paper's width so they sit inset on mobile rather
-          than running edge to edge. */}
-      <div className="mt-8 flex w-[88%] flex-col gap-3 sm:w-full sm:flex-row">
+      {/* Actions — side by side at every size, inset to the paper's width so
+          they never run edge to edge on a phone. */}
+      <div className="mt-8 flex w-[86%] flex-row gap-3 sm:w-full">
         <button
           onClick={saveImage}
           disabled={saving !== null}
-          className="flex h-[50px] flex-1 items-center justify-center bg-sw-blush font-body text-[16px] text-sw-cream transition-colors duration-300 hover:bg-[#95402f] active:scale-[0.99] disabled:opacity-50"
+          // #edcac3 is the site's light blush; #95402f text keeps it clearly
+          // readable and obviously interactive rather than looking disabled.
+          className="flex h-[50px] flex-1 items-center justify-center whitespace-nowrap bg-[#edcac3] px-3 font-body text-[14px] font-medium text-[#95402f] transition-colors duration-300 hover:bg-[#e5b8ad] active:scale-[0.99] disabled:opacity-50 sm:text-[16px]"
         >
           {saving === "png" ? "Saving…" : "Save as image"}
         </button>
         <button
           onClick={savePdf}
           disabled={saving !== null}
-          className="flex h-[50px] flex-1 items-center justify-center border border-[#ddd5d4] bg-white font-body text-[16px] text-[#3d3d3d] transition-colors duration-300 hover:border-sw-blush disabled:opacity-50"
+          className="flex h-[50px] flex-1 items-center justify-center whitespace-nowrap border border-[#ddd5d4] bg-white px-3 font-body text-[14px] text-[#3d3d3d] transition-colors duration-300 hover:border-sw-blush active:scale-[0.99] disabled:opacity-50 sm:text-[16px]"
         >
           {saving === "pdf" ? "Saving…" : "Save as PDF"}
         </button>

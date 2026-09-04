@@ -219,19 +219,23 @@ html {
 .sw-notch {
   position: absolute;
   top: 50%;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border-radius: 9999px;
   background: #fbf7f5;
   transform: translateY(-50%);
+  /* A faint inner edge so the bite reads against near-white paper. */
+  box-shadow: inset 0 0 0 1px rgba(150, 64, 47, 0.1);
 }
 
+/* Half the circle sits outside the paper, so each renders as a bite taken
+   out of the edge rather than a dot sitting on it. */
 .sw-notch-left {
-  left: -9px;
+  left: -11px;
 }
 
 .sw-notch-right {
-  right: -9px;
+  right: -11px;
 }
 
 @media (prefers-reduced-motion: reduce) {
