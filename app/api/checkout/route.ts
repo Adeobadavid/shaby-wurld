@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
  * A pending row that never completes is harmless by comparison.
  */
 export async function POST(request: Request) {
-  const limit = rateLimit(`checkout:${clientIp(request)}`, { limit: 10, windowMs: 60_000 });
+  const limit = await rateLimit(`checkout:${clientIp(request)}`, { limit: 10, windowMs: 60_000 });
   if (!limit.ok) {
     return NextResponse.json(
       { error: "Too many attempts. Please wait a moment." },

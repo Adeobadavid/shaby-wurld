@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
  * endpoint here is someone else's bill.
  */
 export async function POST(request: Request) {
-  const limit = rateLimit(`rates:${clientIp(request)}`, { limit: 15, windowMs: 60_000 });
+  const limit = await rateLimit(`rates:${clientIp(request)}`, { limit: 15, windowMs: 60_000 });
   if (!limit.ok) {
     return NextResponse.json(
       { error: "Too many requests. Please wait a moment." },
