@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { verifyWebhookSignature, fromKobo } from "@/lib/paystack";
+import { fromKobo } from "@/lib/paystack";
+import { verifyWebhookSignature } from "@/lib/paystack-webhook";
 import { getWriteClient } from "@/sanity/client";
 import { getSiteSettings } from "@/sanity/queries";
 import { notifyNewOrder } from "@/lib/whatsapp";

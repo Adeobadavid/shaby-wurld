@@ -1,5 +1,9 @@
-import crypto from "crypto";
 import { env } from "./env";
+
+// NOTE: no node:crypto import here on purpose. This module is pulled into
+// React Server Components (the order confirmation page), and importing a Node
+// built-in there fails to load on Cloudflare Workers. Signature verification
+// lives in ./paystack-webhook, which only the webhook route imports.
 
 /**
  * Paystack.
@@ -92,24 +96,5 @@ export async function verifyTransaction(reference: string): Promise<{
   };
 }
 
-/**
- * Verify a webhook signature.
- *
- * `rawBody` must be the exact bytes Paystack sent. Compared with
- * timingSafeEqual so the check can't be probed byte by byte via response
- * timing.
- */
-export function verifyWebhookSignature(rawBody: string, signature: string | null): boolean {
-  if (!signature) return false;
-
-  const expected = crypto
-    .createHmac("sha512", env.paystackSecretKey())
-    .update(rawBody, "utf8")
-    .digest("hex");
-
-  const a = Buffer.from(expected, "utf8");
-  const b = Buffer.from(signature, "utf8");
-
-  if (a.length !== b.length) return false;
-  return crypto.timingSafeEqual(a, b);
-}
+// verifyWebhookSignature now lives in ./paystack-webhook — see the note at the
+// top of this file for why it must not be imported from here.
