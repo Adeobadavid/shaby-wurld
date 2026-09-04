@@ -171,6 +171,65 @@ html {
   transform-origin: left;
 }
 
+/* ---------------------------------------------------------------
+   Receipt printer
+   The paper starts fully behind the housing and is pushed down, as if
+   fed out of a slot. The wrapper clips nothing — the housing simply
+   sits above the paper on the z-axis, so the paper appears from under
+   its lower edge.
+   --------------------------------------------------------------- */
+.sw-receipt-paper {
+  animation: sw-print 2600ms cubic-bezier(0.16, 1, 0.3, 1) 400ms both;
+  transform-origin: top center;
+}
+
+@keyframes sw-print {
+  from {
+    /* -100% hides the paper entirely behind the printer body. */
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Slight judder while feeding, the way a real thermal printer steps. */
+.sw-printer-body {
+  animation: sw-printer-shake 2600ms steps(2, end) 400ms;
+}
+
+@keyframes sw-printer-shake {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(0.6px); }
+}
+
+/* Torn edge: a row of triangles masked out of the paper's bottom. */
+.sw-receipt-tear {
+  height: 10px;
+  background: inherit;
+  mask-image: repeating-linear-gradient(
+    -45deg,
+    #000 0 6px,
+    transparent 6px 12px
+  );
+  mask-size: 12px 20px;
+  mask-repeat: repeat-x;
+  -webkit-mask-image: repeating-linear-gradient(
+    -45deg,
+    #000 0 6px,
+    transparent 6px 12px
+  );
+  -webkit-mask-size: 12px 20px;
+  -webkit-mask-repeat: repeat-x;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sw-receipt-paper,
+  .sw-printer-body {
+    animation: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .drawer-slide-in,
   .sw-backdrop,

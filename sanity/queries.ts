@@ -134,6 +134,43 @@ export async function getReviews(): Promise<Review[]> {
   return client.fetch(reviewsQuery, {}, CACHE);
 }
 
+export type ReceiptOrder = {
+  orderNumber: string;
+  status: string;
+  items: { name: string; shade?: string; qty: number; unitPrice: number }[];
+  subtotal: number;
+  shippingCost: number;
+  total: number;
+  courier?: string;
+  paidAt?: string;
+};
+
+/**
+ * Order lookup for the receipt.
+ *
+ * Deliberately narrow: no email, phone or address. The confirmation page is
+ * reachable by anyone holding a reference, so it returns only what a receipt
+ * needs and nothing that would leak the customer's identity or location.
+ */
+export async function getOrderForReceipt(reference: string): Promise<ReceiptOrder | null> {
+  if (!reference) return null;
+
+  return client.fetch(
+    groq`*[_type == "order" && paystackReference == $reference][0]{
+      orderNumber,
+      status,
+      items[]{ name, shade, qty, unitPrice },
+      subtotal,
+      shippingCost,
+      total,
+      "courier": shippingCourier,
+      paidAt
+    }`,
+    { reference },
+    { cache: "no-store" }
+  );
+}
+
 /** Server-side price lookup — the browser's claimed prices are never trusted. */
 export async function getProductPrices(
   ids: string[]
