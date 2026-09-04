@@ -169,7 +169,7 @@ export default function CheckoutPanel({
   return (
     <div className="flex h-full w-full flex-col">
       {/* Header — fixed */}
-      <div className="flex w-full shrink-0 items-start justify-between border-b-[0.5px] border-[#edcac3] px-[26px] pb-[18px] pt-[38px]">
+      <div className="flex w-full shrink-0 items-start justify-between border-b-[0.5px] border-[#edcac3] px-5 pb-[18px] pt-7 sm:px-[26px] sm:pt-[38px]">
         <div className="flex flex-col gap-[18px]">
           <div className="flex items-center gap-[14px]">
             <button aria-label="Back to bag" onClick={backToBag} className="group text-[#565656]">
@@ -195,7 +195,7 @@ export default function CheckoutPanel({
       </div>
 
       {/* Form — the only part that scrolls */}
-      <div className="flex w-full flex-1 flex-col gap-10 overflow-y-auto px-[26px] py-[36px]">
+      <div className="flex w-full flex-1 flex-col gap-10 overflow-y-auto px-5 py-7 sm:px-[26px] sm:py-[36px]">
         <div className="flex flex-col gap-7">
           <p className="font-body text-[12px] font-semibold text-black">CONTACT</p>
           <label className="flex flex-col gap-[14px]">
@@ -291,7 +291,7 @@ export default function CheckoutPanel({
         />
 
         {/* Totals */}
-        <div className="-mx-[26px] flex w-[calc(100%+52px)] flex-col gap-2 bg-[#f6f3f3] px-[26px] py-4 font-body text-[14px] text-[#535353]">
+        <div className="-mx-5 flex w-[calc(100%+40px)] sm:-mx-[26px] sm:w-[calc(100%+52px)] flex-col gap-2 bg-[#f6f3f3] px-5 py-4 sm:px-[26px] font-body text-[14px] text-[#535353]">
           <div className="flex items-center justify-between">
             <p>
               {itemCount} item{itemCount === 1 ? "" : "s"}
@@ -310,7 +310,7 @@ export default function CheckoutPanel({
       </div>
 
       {/* Continue — fixed */}
-      <div className="flex w-full shrink-0 flex-col gap-3 border-t-[0.5px] border-[#edcac3] px-[26px] pb-[26px] pt-[28px]">
+      <div className="flex w-full shrink-0 flex-col gap-3 border-t-[0.5px] border-[#edcac3] px-5 pb-5 pt-6 sm:px-[26px] sm:pb-[26px] sm:pt-[28px]">
         {submitError && (
           <p className="font-body text-[13px] text-[#95402f]" role="alert">
             {submitError}

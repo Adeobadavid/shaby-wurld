@@ -48,11 +48,13 @@ export default function QuickView() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4"
       onClick={closeQuickView}
     >
       <div
-        className="relative flex w-full max-w-[982px] flex-col overflow-hidden bg-white shadow-[0px_0px_20px_0px_rgba(0,0,0,0.1)] sm:flex-row"
+        // Mobile: a bottom sheet filling the width and most of the height,
+        // scrollable. Desktop keeps the centred two-column dialog.
+        className="relative flex max-h-[92dvh] w-full max-w-[982px] flex-col overflow-y-auto bg-white shadow-[0px_0px_20px_0px_rgba(0,0,0,0.1)] sm:max-h-none sm:flex-row sm:overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -63,13 +65,13 @@ export default function QuickView() {
           &times;
         </button>
 
-        <div className="flex h-[320px] w-full shrink-0 p-[15px] pr-[50px] sm:h-auto sm:min-h-[576px] sm:w-[495px]">
+        <div className="flex h-[240px] w-full shrink-0 p-3 sm:h-auto sm:min-h-[576px] sm:w-[495px] sm:p-[15px] sm:pr-[50px]">
           <div className="relative flex-1 overflow-hidden bg-[#f6f3f3]">
             <Image src={p.image} alt={p.name} fill sizes="430px" className="object-contain p-[48px]" />
           </div>
         </div>
 
-        <div className="flex flex-1 flex-col gap-6 p-6 sm:gap-[40px] sm:p-[43px_54px_43px_0]">
+        <div className="flex flex-1 flex-col gap-5 px-5 pb-6 pt-2 sm:gap-[40px] sm:p-[43px_54px_43px_0]">
           <div className="flex flex-col gap-4 sm:gap-[28px]">
             <div className="flex flex-col gap-2 sm:gap-[10px]">
               <p className="font-body text-[14px] font-medium uppercase tracking-[0.28px] text-sw-blush">

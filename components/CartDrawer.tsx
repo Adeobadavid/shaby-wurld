@@ -49,7 +49,9 @@ export default function CartDrawer() {
         role="dialog"
         aria-modal="true"
         aria-label={onCheckout ? "Checkout" : "Your bag"}
-        className="drawer-slide-in flex h-full w-full max-w-[427px] flex-col overflow-hidden bg-white shadow-[-4px_0px_48px_0px_rgba(0,0,0,0.14)]"
+        // Full-bleed on mobile — a drawer that stops short of the edge wastes
+        // the little width a phone has. Capped at 427px from sm up.
+        className="drawer-slide-in flex h-full w-full flex-col overflow-hidden bg-white shadow-[-4px_0px_48px_0px_rgba(0,0,0,0.14)] sm:max-w-[427px]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Two steps on one track, each exactly half its width. Shifting the

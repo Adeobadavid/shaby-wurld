@@ -16,7 +16,7 @@ export default function BagPanel() {
   return (
     <div className="flex h-full w-full flex-col">
       {/* Header — fixed, never scrolls */}
-      <div className="flex w-full shrink-0 items-start justify-between border-b-[0.5px] border-[#edcac3] px-[26px] pb-[18px] pt-[38px]">
+      <div className="flex w-full shrink-0 items-start justify-between border-b-[0.5px] border-[#edcac3] px-5 pb-[18px] pt-7 sm:px-[26px] sm:pt-[38px]">
         <div className="flex flex-col gap-[18px]">
           <div className="flex items-center gap-2">
             <p className="font-body text-[20px] font-medium tracking-[0.4px] text-black">Your Bag</p>
@@ -40,7 +40,7 @@ export default function BagPanel() {
       </div>
 
       {/* Product list — the only part that scrolls */}
-      <div className="flex w-full flex-1 flex-col gap-[26px] overflow-y-auto px-[26px] py-[26px]">
+      <div className="flex w-full flex-1 flex-col gap-[26px] overflow-y-auto px-5 py-5 sm:px-[26px] sm:py-[26px]">
         {items.length === 0 && (
           <p className="py-10 text-center font-body text-[14px] text-[#a79b99]">Your bag is empty.</p>
         )}
@@ -99,7 +99,7 @@ export default function BagPanel() {
       </div>
 
       {/* Subtotal + Checkout — fixed, never scrolls */}
-      <div className="flex w-full shrink-0 flex-col gap-[15px] border-t-[0.5px] border-[#edcac3] px-[26px] pb-[26px] pt-[28px]">
+      <div className="flex w-full shrink-0 flex-col gap-[15px] border-t-[0.5px] border-[#edcac3] px-5 pb-5 pt-6 sm:px-[26px] sm:pb-[26px] sm:pt-[28px]">
         <div className="flex flex-col gap-[10px] font-body text-[14px]">
           <div className="flex justify-between font-medium text-[#3d3d3d]">
             <p>Subtotal</p>

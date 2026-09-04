@@ -77,7 +77,7 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
       {/* Slide dots — always 3, matching Figma's fixed layout. Only real
           images actually cycle; unused dots stay in the default/inactive
           state until more photos exist for this product. */}
-      <div className="flex w-full items-center justify-center gap-[7px] pt-[45px]">
+      <div className="flex w-full items-center justify-center gap-[7px] pt-5 sm:pt-[45px]">
         {[0, 1, 2].map((i) => (
           <span
             key={i}
@@ -92,8 +92,10 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
           devices); always visible on touch screens since there's no
           hover state to reveal it there — the whole card is tappable
           either way, this is just the visual label. */}
-      <div className="relative flex h-[486px] w-full items-center justify-center px-[15px]">
-        <div className="relative flex h-[425px] w-[350px] items-center justify-center overflow-hidden">
+      {/* Fixed 486px/350px was fine one-up; at two-up on a phone it made each
+          card taller than the viewport. Heights are now fluid below sm. */}
+      <div className="relative flex h-[240px] w-full items-center justify-center px-2 sm:h-[486px] sm:px-[15px]">
+        <div className="relative flex h-full w-full max-w-[350px] items-center justify-center overflow-hidden sm:h-[425px]">
           <Image
             src={product.images[index]}
             alt={product.name}
@@ -107,7 +109,7 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
             e.stopPropagation();
             handleOpenQuickView();
           }}
-          className={`absolute bottom-[15px] left-[25px] right-[25px] flex h-[50px] items-center justify-center bg-sw-blush font-body text-[16px] text-sw-cream transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#95402f] sm:translate-y-3 sm:opacity-0 ${
+          className={`absolute bottom-2 left-3 right-3 flex h-[38px] items-center justify-center bg-sw-blush font-body text-[13px] text-sw-cream transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#95402f] sm:bottom-[15px] sm:left-[25px] sm:right-[25px] sm:h-[50px] sm:translate-y-3 sm:text-[16px] sm:opacity-0 ${
             hovered ? "sm:translate-y-0 sm:opacity-100" : ""
           }`}
         >
@@ -116,14 +118,17 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
       </div>
 
       {/* Info */}
-      <div className="flex w-full flex-col gap-[10px] px-[25px] py-[15px]">
+      <div className="flex w-full flex-col gap-2 px-3 py-3 sm:gap-[10px] sm:px-[25px] sm:py-[15px]">
         <div className="flex flex-col gap-[3px]">
-          <p className="font-body text-[16px] tracking-[-0.32px] text-[#a79b99]">
+          <p className="font-body text-[12px] tracking-[-0.32px] text-[#a79b99] sm:text-[16px]">
             {product.category}
           </p>
-          <p className="font-body text-[16px] font-medium text-[#262626]">{product.name}</p>
+          {/* Two lines max on mobile, so cards in a row stay the same height. */}
+          <p className="line-clamp-2 font-body text-[13px] font-medium leading-[1.3] text-[#262626] sm:line-clamp-none sm:text-[16px]">
+            {product.name}
+          </p>
         </div>
-        <p className="font-display text-[22px] tracking-[-0.44px] text-[#262626]">
+        <p className="mt-auto font-display text-[17px] tracking-[-0.44px] text-[#262626] sm:text-[22px]">
           {product.price}
         </p>
       </div>

@@ -78,18 +78,21 @@ export default function BestSellers({ products }: { products?: SanityProduct[] }
       data-figma-node="265:1145"
       className="w-full bg-white px-6 py-16 sm:px-10 sm:py-20 lg:px-[70px] lg:py-24"
     >
-      <div className="mb-10 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
-        <h2 className="font-display text-[32px] font-light text-[#262626] sm:text-[40px]">
+      <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:mb-10 sm:flex-row sm:items-center sm:gap-6">
+        <h2 className="font-display text-[28px] font-light text-[#262626] sm:text-[40px]">
           {active}
         </h2>
-        <div className="flex flex-wrap items-center gap-6 sm:gap-8">
+        {/* One line on mobile: the filters used to wrap onto a second row and
+            push the grid down. Scrolls horizontally rather than wrapping, with
+            the scrollbar hidden so it reads as a strip. */}
+        <div className="-mx-6 flex w-[calc(100%+48px)] items-center gap-4 overflow-x-auto px-6 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:w-auto sm:flex-wrap sm:gap-8 sm:overflow-visible sm:px-0">
           {FILTERS.map((filter) => {
             const isActive = filter === active;
             return (
               <button
                 key={filter}
                 onClick={() => setActive(filter)}
-                className={`group relative pb-[5px] font-body text-[16px] transition-colors ${
+                className={`group relative shrink-0 whitespace-nowrap pb-[5px] font-body text-[13px] transition-colors sm:text-[16px] ${
                   isActive ? "font-semibold text-sw-blush" : "text-[#828282] hover:text-sw-blush"
                 }`}
               >
@@ -105,7 +108,9 @@ export default function BestSellers({ products }: { products?: SanityProduct[] }
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-[25px] sm:grid-cols-2 lg:grid-cols-3">
+      {/* Two per row on mobile: one-up made every product a full scroll
+          screen and buried the range. */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-[25px] lg:grid-cols-3">
         {visibleProducts.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}

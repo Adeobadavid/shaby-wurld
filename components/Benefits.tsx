@@ -70,19 +70,24 @@ export default function Benefits({ benefits }: { benefits?: BenefitItem[] }) {
   return (
     <div
       data-figma-node="265:1122"
-      className="flex w-full flex-wrap items-center justify-center gap-6 bg-[#f7eeeb] px-6 py-6 sm:gap-10 sm:px-[210px] sm:py-8 lg:gap-[50px] lg:px-[420px] lg:py-[35px]"
+      className="flex w-full flex-nowrap items-center justify-between gap-2 bg-[#f7eeeb] px-3 py-4 sm:flex-wrap sm:justify-center sm:gap-10 sm:px-[210px] sm:py-8 lg:gap-[50px] lg:px-[420px] lg:py-[35px]"
     >
       {items.map((benefit, i) => (
-        <div key={benefit.label} className="flex items-center gap-6 sm:gap-10 lg:gap-[50px]">
-          <div className="group flex items-center gap-[10px] text-[#d68073]">
-            <span className="transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-[3px]">
+        <div
+          key={benefit.label}
+          className="flex min-w-0 flex-1 items-center justify-center gap-2 sm:flex-none sm:gap-10 lg:gap-[50px]"
+        >
+          {/* Mobile: icon above label, small type, so all four fit one row.
+              The old 210px side padding left almost no room and forced a wrap. */}
+          <div className="group flex min-w-0 flex-col items-center gap-1 text-[#d68073] sm:flex-row sm:gap-[10px]">
+            <span className="shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-[3px] [&>svg]:h-5 [&>svg]:w-5 sm:[&>svg]:h-8 sm:[&>svg]:w-8">
               {benefit.iconUrl ? (
-                <img src={benefit.iconUrl} alt="" className="h-8 w-8" />
+                <img src={benefit.iconUrl} alt="" className="h-5 w-5 sm:h-8 sm:w-8" />
               ) : (
                 benefit.icon
               )}
             </span>
-            <span className="whitespace-nowrap font-body text-[16px] font-medium">
+            <span className="text-center font-body text-[10px] font-medium leading-tight sm:whitespace-nowrap sm:text-[16px]">
               {benefit.label}
             </span>
           </div>

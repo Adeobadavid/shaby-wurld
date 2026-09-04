@@ -98,8 +98,10 @@ export default function Hero({ eyebrow, headline, subtext, image }: HeroProps = 
           fill
           priority
           sizes="100vw"
-          className="object-contain"
-          style={{ objectPosition: "center bottom" }}
+          // Mobile fills the frame (cover) so the photo reaches the edges
+          // instead of being letterboxed and pushed to the bottom. Desktop
+          // keeps contain, where the whole shot needs to stay visible.
+          className="object-cover object-top sm:object-contain sm:object-bottom"
         />
       </div>
 
@@ -153,8 +155,10 @@ export default function Hero({ eyebrow, headline, subtext, image }: HeroProps = 
       </nav>
 
       {/* gap-[222px] equivalent before the headline row (scaled down on smaller screens) */}
-      <div className="relative flex w-full flex-1 flex-col px-6 pb-10 pt-16 sm:px-10 sm:pt-24 lg:px-[70px] lg:pt-[222px]">
-        <div className="flex w-full flex-col items-center gap-16 px-4 sm:px-14 lg:flex-row lg:items-start lg:justify-between lg:gap-[730px] lg:px-[175px]">
+      {/* pointer-events-none lets taps reach the photo; children re-enable it
+          so the scroll cue still works. */}
+      <div className="pointer-events-none relative flex w-full flex-1 flex-col px-6 pb-6 pt-8 sm:px-10 sm:pb-10 sm:pt-24 lg:px-[70px] lg:pt-[222px]">
+        <div className="flex w-full flex-col items-center gap-6 px-4 sm:gap-16 sm:px-14 lg:flex-row lg:items-start lg:justify-between lg:gap-[730px] lg:px-[175px]">
           <div className="text-center font-body text-[16px] text-white sm:text-[18px] lg:pt-[300px] lg:text-left">
             {eyebrowLines.map((line, i) => (
               <span key={i} className="sw-line">
@@ -185,7 +189,7 @@ export default function Hero({ eyebrow, headline, subtext, image }: HeroProps = 
 
         {/* gap-[121px] equivalent before the arrow (scaled down on smaller screens) */}
         <div
-          className="sw-fade-up flex flex-1 items-end justify-center pb-2 pt-10 lg:pt-[121px]"
+          className="sw-fade-up pointer-events-auto flex flex-1 items-end justify-center pb-2 pt-6 sm:pt-10 lg:pt-[121px]"
           style={{ animationDelay: "900ms" }}
         >
           <div className="sw-bob">
