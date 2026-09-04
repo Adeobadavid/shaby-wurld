@@ -46,8 +46,33 @@ function ScrollIndicator() {
   );
 }
 
-export default function Hero() {
+export type HeroProps = {
+  eyebrow?: string;
+  headline?: string;
+  subtext?: string;
+  image?: string;
+};
+
+/** Splits copy into lines so each can wipe in separately. */
+function toLines(value: string): string[] {
+  // An explicit newline wins; otherwise split on the last space so a two-word
+  // headline like "Naturally You." still animates as two lines.
+  if (value.includes("\n")) return value.split("\n").filter(Boolean);
+  const words = value.trim().split(/\s+/);
+  if (words.length < 2) return [value];
+  const mid = Math.ceil(words.length / 2);
+  return [words.slice(0, mid).join(" "), words.slice(mid).join(" ")];
+}
+
+export default function Hero({ eyebrow, headline, subtext, image }: HeroProps = {}) {
   const { openBag, count } = useCart();
+
+  // Sanity when present, the original copy otherwise.
+  const eyebrowLines = toLines(eyebrow ?? "Beauty that\nfeels like you.");
+  const headlineLines = toLines(headline ?? "Naturally\nYou.");
+  const subtextLines = toLines(subtext ?? "Made for every\nskin tone.");
+  const heroImage = image ?? "/hero/hero-photo.webp";
+
   return (
     <section
       data-figma-node="265:1105"
@@ -68,7 +93,7 @@ export default function Hero() {
           same as Figma's own background treatment. */}
       <div className="absolute inset-0">
         <Image
-          src="/hero/hero-photo.webp"
+          src={heroImage}
           alt="Model applying Shaby Wurld lip gloss"
           fill
           priority
@@ -80,7 +105,7 @@ export default function Hero() {
 
       {/* Nav — full-width hover strip, matching Figma's Variant2 exactly:
           outer pt-50/px-70/pb-5, inner row gets its own extra pb-30. */}
-      <nav className="relative flex w-full flex-col px-6 pb-[5px] pt-6 transition-colors duration-200 hover:bg-[rgba(255,178,166,0.2)] sm:px-10 lg:px-[70px] lg:pb-[5px] lg:pt-[50px]">
+      <nav className="sw-fade-up relative flex w-full flex-col px-6 pb-[5px] pt-6 transition-colors duration-200 hover:bg-[rgba(255,178,166,0.2)] sm:px-10 lg:px-[70px] lg:pb-[5px] lg:pt-[50px]">
         <div className="flex w-full items-center justify-between pb-4 lg:pb-[30px]">
           <a href="/" className="block h-[26px] w-[160px] sm:h-[31px] sm:w-[197px]">
             <img
@@ -94,10 +119,9 @@ export default function Hero() {
               <a
                 key={link.label}
                 href={link.href}
-                className="group relative py-[5px] font-body text-[16px] tracking-[-0.32px] text-sw-cream"
+                className="sw-underline py-[5px] font-body text-[16px] tracking-[-0.32px] text-sw-cream"
               >
                 {link.label}
-                <span className="absolute -bottom-[2px] left-0 h-px w-0 bg-sw-cream transition-all duration-200 group-hover:w-full" />
               </a>
             ))}
             <button aria-label="Search" className="h-[34px] w-[24px]">
@@ -132,25 +156,41 @@ export default function Hero() {
       <div className="relative flex w-full flex-1 flex-col px-6 pb-10 pt-16 sm:px-10 sm:pt-24 lg:px-[70px] lg:pt-[222px]">
         <div className="flex w-full flex-col items-center gap-16 px-4 sm:px-14 lg:flex-row lg:items-start lg:justify-between lg:gap-[730px] lg:px-[175px]">
           <div className="text-center font-body text-[16px] text-white sm:text-[18px] lg:pt-[300px] lg:text-left">
-            <p>Beauty that</p>
-            <p>feels like you.</p>
+            {eyebrowLines.map((line, i) => (
+              <span key={i} className="sw-line">
+                <span style={{ animationDelay: `${700 + i * 80}ms` }}>{line}</span>
+              </span>
+            ))}
           </div>
 
           <div className="flex flex-col items-center gap-[9px] text-center text-sw-cream lg:items-start lg:text-left">
+            {/* Headline wipes up line by line, then the supporting copy
+                follows — the eye lands on "Naturally You." first. */}
             <h1 className="font-display text-[44px] font-light leading-none tracking-[-1.6px] sm:text-[60px] lg:text-[80px]">
-              <span className="block">Naturally</span>
-              <span className="block">You.</span>
+              {headlineLines.map((line, i) => (
+                <span key={i} className="sw-line">
+                  <span style={{ animationDelay: `${150 + i * 140}ms` }}>{line}</span>
+                </span>
+              ))}
             </h1>
             <p className="font-body text-[16px] sm:text-[18px]">
-              <span className="block">Made for every</span>
-              <span className="block">skin tone.</span>
+              {subtextLines.map((line, i) => (
+                <span key={i} className="sw-line">
+                  <span style={{ animationDelay: `${460 + i * 80}ms` }}>{line}</span>
+                </span>
+              ))}
             </p>
           </div>
         </div>
 
         {/* gap-[121px] equivalent before the arrow (scaled down on smaller screens) */}
-        <div className="flex flex-1 items-end justify-center pb-2 pt-10 lg:pt-[121px]">
-          <ScrollIndicator />
+        <div
+          className="sw-fade-up flex flex-1 items-end justify-center pb-2 pt-10 lg:pt-[121px]"
+          style={{ animationDelay: "900ms" }}
+        >
+          <div className="sw-bob">
+            <ScrollIndicator />
+          </div>
         </div>
       </div>
     </section>

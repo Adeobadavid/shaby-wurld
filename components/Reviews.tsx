@@ -23,20 +23,41 @@ const REVIEWS = [
   { name: "Feyisayo", text: "Delivery was fast and the packaging alone felt luxury. The lip balm has become a permanent bag item for me.", rating: 5, image: "/products/placeholder-2.webp", caption: "@feyisayo - Natural tinted balm" },
 ];
 
-export default function Reviews() {
+export type ReviewItem = {
+  _id: string;
+  name: string;
+  text: string;
+  rating: number;
+  photo?: string;
+};
+
+export default function Reviews({ reviews }: { reviews?: ReviewItem[] }) {
   const [index, setIndex] = useState(0);
   const [progressKey, setProgressKey] = useState(0);
 
+  // Sanity reviews when they exist, the seeded ones otherwise.
+  const list =
+    reviews && reviews.length > 0
+      ? reviews.map((r) => ({
+          name: r.name,
+          text: r.text,
+          rating: r.rating,
+          image: r.photo ?? "/brand-story/photo-1.webp",
+          caption: `@${r.name.toLowerCase().replace(/\s+/g, "")}`,
+        }))
+      : REVIEWS;
+
   useEffect(() => {
+    if (list.length < 2) return; // nothing to advance through
     const timer = setInterval(() => {
-      setIndex((i) => (i + 1) % REVIEWS.length);
+      setIndex((i) => (i + 1) % list.length);
       setProgressKey((k) => k + 1);
     }, ADVANCE_MS);
     return () => clearInterval(timer);
-  }, []);
+  }, [list.length]);
 
-  const active = REVIEWS[index];
-  const slots = [0, 1, 2].map((offset) => REVIEWS[(index + offset) % REVIEWS.length]);
+  const active = list[index] ?? list[0];
+  const slots = [0, 1, 2].map((offset) => list[(index + offset) % list.length]);
 
   return (
     <section

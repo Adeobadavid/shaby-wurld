@@ -5,24 +5,63 @@ import PerfectLiner from "@/components/PerfectLiner";
 import BrandStory from "@/components/BrandStory";
 import Reviews from "@/components/Reviews";
 import Footer from "@/components/Footer";
-import QuickView from "@/components/QuickView";
-import BagDrawer from "@/components/BagDrawer";
-import CheckoutDrawer from "@/components/CheckoutDrawer";
+import Reveal from "@/components/Reveal";
 
-export default function Home() {
+import { getProducts, getReviews, getSiteSettings } from "@/sanity/queries";
+
+/**
+ * Server component: content is fetched here and passed down as props, so no
+ * Sanity credentials or query logic ever reach the browser.
+ *
+ * Revalidates every 60s (see sanity/queries.ts), which is what makes Studio
+ * edits appear without a redeploy.
+ */
+export const revalidate = 60;
+
+export default async function Home() {
+  // One round of fetches in parallel rather than a waterfall.
+  const [settings, products, reviews] = await Promise.all([
+    getSiteSettings(),
+    getProducts(),
+    getReviews(),
+  ]);
+
   return (
     <main className="relative">
-      <Hero />
-      <Benefits />
-      <BestSellers />
-      <PerfectLiner />
-      <BrandStory />
-      <Reviews />
-      <Footer />
-
-      <QuickView />
-      <BagDrawer />
-      <CheckoutDrawer />
+      {/* Hero animates on load, so it isn't wrapped — everything below it
+          reveals as you scroll to it. */}
+      <Hero
+        eyebrow={settings?.heroEyebrow}
+        headline={settings?.heroHeadline}
+        subtext={settings?.heroSubtext}
+        image={settings?.heroImage}
+      />
+      <Reveal>
+        <Benefits benefits={settings?.benefits} />
+      </Reveal>
+      <Reveal>
+        <BestSellers products={products} />
+      </Reveal>
+      <Reveal>
+        <PerfectLiner />
+      </Reveal>
+      <Reveal>
+        <BrandStory
+          heading={settings?.storyHeading}
+          body={settings?.storyBody}
+          images={settings?.storyImages}
+        />
+      </Reveal>
+      <Reveal>
+        <Reviews reviews={reviews} />
+      </Reveal>
+      <Footer
+        contactPhone={settings?.contactPhone}
+        contactEmail={settings?.contactEmail}
+        contactAddress={settings?.contactAddress}
+        footerNote={settings?.footerNote}
+        socialLinks={settings?.socialLinks}
+      />
     </main>
   );
 }

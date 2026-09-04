@@ -43,21 +43,50 @@ const BENEFITS = [
   },
 ];
 
-export default function Benefits() {
+/**
+ * Content comes from Sanity (Site Settings -> Benefits). The built-in list
+ * above is the fallback, so the strip still renders correctly before any
+ * content has been entered — an empty CMS should never produce an empty page.
+ *
+ * Icons stay in code: they're inline SVG paths from the same icon sets the
+ * design used, and they inherit `currentColor`. A Sanity-uploaded icon image
+ * overrides them when one is provided.
+ */
+export type BenefitItem = { title: string; description?: string; icon?: string };
+
+export default function Benefits({ benefits }: { benefits?: BenefitItem[] }) {
+  const items =
+    benefits && benefits.length > 0
+      ? benefits.map((b) => ({
+          label: b.title,
+          iconUrl: b.icon,
+          // Reuse the matching built-in icon when the titles line up.
+          icon: BENEFITS.find(
+            (d) => d.label.toLowerCase() === b.title.trim().toLowerCase()
+          )?.icon,
+        }))
+      : BENEFITS.map((b) => ({ label: b.label, icon: b.icon, iconUrl: undefined }));
+
   return (
     <div
       data-figma-node="265:1122"
       className="flex w-full flex-wrap items-center justify-center gap-6 bg-[#f7eeeb] px-6 py-6 sm:gap-10 sm:px-[210px] sm:py-8 lg:gap-[50px] lg:px-[420px] lg:py-[35px]"
     >
-      {BENEFITS.map((benefit, i) => (
+      {items.map((benefit, i) => (
         <div key={benefit.label} className="flex items-center gap-6 sm:gap-10 lg:gap-[50px]">
-          <div className="flex items-center gap-[10px] text-[#d68073]">
-            {benefit.icon}
+          <div className="group flex items-center gap-[10px] text-[#d68073]">
+            <span className="transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-[3px]">
+              {benefit.iconUrl ? (
+                <img src={benefit.iconUrl} alt="" className="h-8 w-8" />
+              ) : (
+                benefit.icon
+              )}
+            </span>
             <span className="whitespace-nowrap font-body text-[16px] font-medium">
               {benefit.label}
             </span>
           </div>
-          {i < BENEFITS.length - 1 && (
+          {i < items.length - 1 && (
             <span className="hidden h-[27px] w-px bg-[#d68073]/30 sm:block" />
           )}
         </div>

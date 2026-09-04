@@ -24,7 +24,12 @@ export type QuickViewProduct = {
   description: string;
   price: number;
   image: string;
+  /** Enabled shades only — disabled ones are filtered out in the GROQ query. */
+  shades?: { name: string; color: string }[];
+  inStock?: boolean;
 };
+
+export type DrawerStep = "bag" | "checkout";
 
 type CartContextType = {
   items: CartItem[];
@@ -34,13 +39,16 @@ type CartContextType = {
   subtotal: number;
   count: number;
 
-  isBagOpen: boolean;
+  /**
+   * The bag and checkout are two steps of ONE drawer, not two overlays —
+   * the panel slides in once, then the steps slide horizontally inside it.
+   */
+  isDrawerOpen: boolean;
+  step: DrawerStep;
   openBag: () => void;
-  closeBag: () => void;
-
-  isCheckoutOpen: boolean;
   openCheckout: () => void;
-  closeCheckout: () => void;
+  backToBag: () => void;
+  closeDrawer: () => void;
 
   quickViewProduct: QuickViewProduct | null;
   openQuickView: (product: QuickViewProduct) => void;
@@ -51,8 +59,8 @@ const CartContext = createContext<CartContextType | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
-  const [isBagOpen, setIsBagOpen] = useState(false);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [step, setStep] = useState<DrawerStep>("bag");
   const [quickViewProduct, setQuickViewProduct] = useState<QuickViewProduct | null>(null);
 
   const addItem = useCallback((item: Omit<CartItem, "qty">, qty = 1) => {
@@ -85,18 +93,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     updateQty,
     subtotal,
     count,
-    isBagOpen,
+    isDrawerOpen,
+    step,
+    // Opening from the nav bag icon always lands on step 1.
     openBag: () => {
-      setIsCheckoutOpen(false);
-      setIsBagOpen(true);
+      setStep("bag");
+      setIsDrawerOpen(true);
     },
-    closeBag: () => setIsBagOpen(false),
-    isCheckoutOpen,
     openCheckout: () => {
-      setIsBagOpen(false);
-      setIsCheckoutOpen(true);
+      setStep("checkout");
+      setIsDrawerOpen(true);
     },
-    closeCheckout: () => setIsCheckoutOpen(false),
+    backToBag: () => setStep("bag"),
+    closeDrawer: () => setIsDrawerOpen(false),
     quickViewProduct,
     openQuickView: (product) => setQuickViewProduct(product),
     closeQuickView: () => setQuickViewProduct(null),

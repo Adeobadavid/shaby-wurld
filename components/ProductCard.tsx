@@ -21,6 +21,9 @@ export type ProductCardData = {
   price: string;
   priceValue: number;
   description?: string;
+  /** Only enabled shades reach here — disabled ones are filtered out in GROQ. */
+  shades?: { name: string; color: string }[];
+  inStock?: boolean;
 };
 
 const SLIDE_DELAY_MS = 1400;
@@ -55,6 +58,8 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
         "Rich pigments, glass-like shine, and shades designed to flatter deeper skin tones.",
       price: product.priceValue,
       image: product.images[0],
+      shades: product.shades ?? [],
+      inStock: product.inStock !== false,
     });
   };
 
@@ -67,7 +72,7 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
       onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleOpenQuickView()}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="flex w-full cursor-pointer flex-col items-start gap-[14px] bg-[#f6f3f3] transition-transform active:scale-[0.98]"
+      className="group flex w-full cursor-pointer flex-col items-start gap-[14px] bg-[#f6f3f3] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-[6px] active:scale-[0.98]"
     >
       {/* Slide dots — always 3, matching Figma's fixed layout. Only real
           images actually cycle; unused dots stay in the default/inactive
@@ -94,7 +99,7 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
             alt={product.name}
             fill
             sizes="350px"
-            className="object-cover transition-opacity duration-300"
+            className="object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.07]"
           />
         </div>
         <button
@@ -102,8 +107,8 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
             e.stopPropagation();
             handleOpenQuickView();
           }}
-          className={`absolute bottom-[15px] left-[25px] right-[25px] flex h-[50px] items-center justify-center bg-sw-blush font-body text-[16px] text-sw-cream transition-opacity duration-200 hover:bg-[#95402f] sm:opacity-0 ${
-            hovered ? "sm:opacity-100" : ""
+          className={`absolute bottom-[15px] left-[25px] right-[25px] flex h-[50px] items-center justify-center bg-sw-blush font-body text-[16px] text-sw-cream transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#95402f] sm:translate-y-3 sm:opacity-0 ${
+            hovered ? "sm:translate-y-0 sm:opacity-100" : ""
           }`}
         >
           Quick view

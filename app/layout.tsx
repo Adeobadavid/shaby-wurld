@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Instrument_Sans } from "next/font/google";
 import { CartProvider } from "@/lib/cart-context";
 import QuickView from "@/components/QuickView";
-import BagDrawer from "@/components/BagDrawer";
-import CheckoutDrawer from "@/components/CheckoutDrawer";
+import CartDrawer from "@/components/CartDrawer";
 import "./globals.css";
 
 const instrumentSans = Instrument_Sans({
@@ -27,9 +26,10 @@ export default function RootLayout({
         <body className="font-body antialiased">
           <CartProvider>
             {children}
+            {/* Overlays live here, above the provider, so they mount once
+                for the whole app rather than per page. */}
             <QuickView />
-            <BagDrawer />
-            <CheckoutDrawer />
+            <CartDrawer />
           </CartProvider>
         </body>
     </html>

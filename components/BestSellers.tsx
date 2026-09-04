@@ -29,15 +29,48 @@ const ALL_PRODUCTS: (ProductCardData & { category: Category; featured?: boolean 
 
 const FILTERS: Category[] = ["Best Seller", "All Products", "Lip Gloss", "Lip Liner", "Lip Balm"];
 
-export default function BestSellers() {
+/** The Sanity shape, kept loose so this file doesn't import server code. */
+export type SanityProduct = {
+  _id: string;
+  name: string;
+  category: string;
+  price: number;
+  description?: string;
+  images: string[];
+  shades?: { name: string; color: string }[];
+  inStock?: boolean;
+  featured?: boolean;
+};
+
+const naira = (n: number) => `₦${n.toLocaleString()}.00`;
+
+export default function BestSellers({ products }: { products?: SanityProduct[] }) {
   const [active, setActive] = useState<Category>("Best Seller");
+
+  // Sanity when it has content; the placeholder list otherwise, so the grid
+  // is never empty before products have been added.
+  const all =
+    products && products.length > 0
+      ? products.map((p) => ({
+          id: p._id,
+          images: p.images?.length ? p.images : ["/products/placeholder-1.webp"],
+          category: p.category as Category,
+          name: p.name,
+          price: naira(p.price),
+          priceValue: p.price,
+          description: p.description,
+          shades: p.shades,
+          inStock: p.inStock !== false,
+          featured: p.featured === true,
+        }))
+      : ALL_PRODUCTS;
 
   const visibleProducts =
     active === "Best Seller"
-      ? ALL_PRODUCTS.filter((p) => p.featured)
+      ? all.filter((p) => p.featured)
       : active === "All Products"
-      ? ALL_PRODUCTS
-      : ALL_PRODUCTS.filter((p) => p.category === active);
+      ? all
+      : all.filter((p) => p.category === active);
 
   return (
     <section

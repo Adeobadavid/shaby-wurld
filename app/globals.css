@@ -49,8 +49,144 @@ html {
   animation: drawer-slide-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Backdrop fades in on its own so the dark wash doesn't slam on at full
+   strength the instant the panel starts moving. */
+@keyframes sw-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.sw-backdrop {
+  animation: sw-backdrop-in 300ms ease-out both;
+}
+
+/* ---------------------------------------------------------------
+   Motion system
+   One easing curve everywhere (a soft overshoot-free ease-out) so
+   the whole storefront feels like it moves as one piece.
+   --------------------------------------------------------------- */
+:root {
+  --sw-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Scroll reveal — driven by the <Reveal> component. Starts offset and
+   transparent, drops the transform once it enters the viewport. */
+.sw-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 800ms var(--sw-ease),
+    transform 800ms var(--sw-ease);
+}
+
+.sw-reveal-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Masked line reveal — each line sits in an overflow-hidden box and
+   slides up from beneath it, so the text wipes into view instead of
+   just fading. Used for the hero headline. */
+.sw-line {
+  display: block;
+  overflow: hidden;
+  /* Descenders ("y", "g") would be clipped by the mask at leading-none.
+     The padding buys room; the negative margin cancels it out so the
+     visual rhythm of the headline is unchanged. */
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}
+
+.sw-line > * {
+  display: block;
+  animation: sw-line-rise 1000ms var(--sw-ease) both;
+}
+
+@keyframes sw-line-rise {
+  from {
+    transform: translateY(110%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Generic entrance for hero chrome that shouldn't wipe (nav, arrow). */
+.sw-fade-up {
+  animation: sw-fade-up 900ms var(--sw-ease) both;
+}
+
+@keyframes sw-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Idle bob on the scroll cue — a standing invitation to scroll. */
+.sw-bob {
+  animation: sw-bob 2.4s ease-in-out infinite;
+}
+
+@keyframes sw-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+/* Underline wipe for links: grows from the left on hover, retracts to
+   the right on leave, so it never looks like it snaps back. */
+.sw-underline {
+  position: relative;
+}
+
+.sw-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 1px;
+  width: 100%;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 400ms var(--sw-ease);
+}
+
+.sw-underline:hover::after,
+.sw-underline:focus-visible::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .drawer-slide-in {
+  .drawer-slide-in,
+  .sw-backdrop,
+  .sw-line > *,
+  .sw-fade-up,
+  .sw-bob {
     animation: none;
+  }
+
+  .sw-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .sw-underline::after {
+    transition: none;
   }
 }

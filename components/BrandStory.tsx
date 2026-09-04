@@ -17,7 +17,21 @@ import Image from "next/image";
  * "Belor Design" product shot — same placeholder caveat as elsewhere;
  * the other two are genuine Shaby Wurld branding.
  */
-export default function BrandStory() {
+export type BrandStoryProps = {
+  heading?: string;
+  body?: string;
+  images?: string[];
+};
+
+const DEFAULT_HEADING = "Beauty made for you.";
+const DEFAULT_BODY =
+  "Shaby wurld is a bold, all gender inclusive, and modern cosmetic brand which is Global and unapologetically stylish edge elegance soft meets fierce inclusive, expressive, and youthful — feels luxury but not intimidating";
+
+export default function BrandStory({ heading, body, images }: BrandStoryProps = {}) {
+  // The composite is a single flat export from Figma; a Sanity upload
+  // replaces it wholesale when one is provided.
+  const composite = images?.[0] ?? "/brand-story/composite.webp";
+
   return (
     <section
       id="about"
@@ -27,7 +41,7 @@ export default function BrandStory() {
       <div className="flex w-full max-w-[1186px] flex-col items-center gap-16">
         <div className="relative w-full" style={{ aspectRatio: "1600/733" }}>
           <Image
-            src="/brand-story/composite.webp"
+            src={composite}
             alt="Shaby Wurld product photography"
             fill
             sizes="1186px"
@@ -37,13 +51,13 @@ export default function BrandStory() {
             className="absolute text-right font-display text-[24px] leading-[0.95] text-black sm:text-[36px] lg:text-[50px]"
             style={{ left: "59%", top: "-14%", width: "31%" }}
           >
-            Beauty made for you.
+            {heading ?? DEFAULT_HEADING}
           </p>
         </div>
 
         <div className="-mt-10 flex w-full max-w-[496px] flex-col items-center gap-[50px] text-center lg:-mt-[81px] lg:items-start lg:text-left">
-          <p className="font-body text-[16px] leading-[1.35] text-[#707070]">
-            Shaby wurld is a bold, all gender inclusive, and modern cosmetic brand which is Global and unapologetically stylish edge elegance soft meets fierce inclusive, expressive, and youthful — feels luxury but not intimidating
+          <p className="whitespace-pre-line font-body text-[16px] leading-[1.35] text-[#707070]">
+            {body ?? DEFAULT_BODY}
           </p>
           <a
             href="#shop"
