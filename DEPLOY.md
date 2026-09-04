@@ -25,7 +25,19 @@ npx wrangler kv namespace create NEXT_INC_CACHE_KV
 Each prints an `id`. Paste them into `wrangler.jsonc`, replacing the two
 `PLACEHOLDER_REPLACE_WITH_REAL_ID` values.
 
-## 3. Set the secrets
+## 3. First deploy (creates the Worker)
+
+Secrets can only be attached to a Worker that already exists, so the first
+deploy comes before them. This deploy will start but fail at runtime because
+it has no credentials yet — that is expected, and fixed by step 4.
+
+```bash
+npm run cf:deploy
+```
+
+Note the URL it prints, e.g. `https://shaby-wurld.<your-subdomain>.workers.dev`.
+
+## 4. Set the secrets
 
 These are **not** in `wrangler.jsonc` — that file is committed to git. Secrets
 live in Cloudflare's encrypted store:
@@ -43,27 +55,36 @@ private. Neither replaces the other.
 
 Each prompts for the value — nothing is echoed or written to disk.
 
-The public (`NEXT_PUBLIC_*`) values are baked in at build time from
-`.env.local`, so make sure `NEXT_PUBLIC_SITE_URL` is your real domain before
-building for production, not `http://localhost:3000`. Paystack redirects back
-to whatever that was set to at build time.
+## 5. Set the site URL and redeploy
 
-## 4. Preview locally in the real runtime
+`NEXT_PUBLIC_*` values are baked in **at build time**, not read at runtime, so
+this has to be right before you build. Paystack sends the customer back to
+whatever `NEXT_PUBLIC_SITE_URL` was when the bundle was built.
 
-```bash
-npm run cf:preview
+A `workers.dev` URL is perfectly fine to launch on — it is a real HTTPS origin
+and Paystack accepts it. Put the URL from step 3 in `.env.local`:
+
+```
+NEXT_PUBLIC_SITE_URL=https://shaby-wurld.<your-subdomain>.workers.dev
 ```
 
-This runs the actual Workers runtime rather than Node, so it catches anything
-that only breaks on Cloudflare. Worth doing before the first deploy.
-
-## 5. Deploy
+Then rebuild so both the secrets and the URL are live:
 
 ```bash
 npm run cf:deploy
 ```
 
-## 6. Connect the domain
+Swap in the custom domain later and redeploy — the only cost of changing it is
+one more build.
+
+To exercise the real Workers runtime locally first (catches anything that only
+breaks on Cloudflare):
+
+```bash
+npm run cf:preview
+```
+
+## 6. Connect the domain (optional — do it whenever)
 
 Cloudflare dashboard → **Workers & Pages** → `shaby-wurld` → **Settings** →
 **Domains & Routes** → **Add custom domain**.

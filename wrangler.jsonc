@@ -22,12 +22,12 @@
       // Rate limiting. Workers isolates do not share memory, so the limiter
       // must keep its counters somewhere shared or it counts almost nothing.
       "binding": "RATE_LIMIT_KV",
-      "id": "PLACEHOLDER_REPLACE_WITH_REAL_ID"
+      "id": "2e5aec7566f54b1b9739081fbe335de1"
     },
     {
       // Incremental cache for ISR (the 60s revalidate on the homepage).
       "binding": "NEXT_INC_CACHE_KV",
-      "id": "PLACEHOLDER_REPLACE_WITH_REAL_ID"
+      "id": "d703774906144b6d9d0fafc97a2adea5"
     }
   ]
 
