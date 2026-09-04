@@ -18,3 +18,7 @@ coverage
 .open-next
 .wrangler
 cloudflare-env.d.ts
+
+# Sanity build artifacts
+.sanity
+dist
