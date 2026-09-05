@@ -22,3 +22,6 @@ cloudflare-env.d.ts
 # Sanity build artifacts
 .sanity
 dist
+
+# Working catalogue spreadsheet (regenerate with scripts/products-csv.mjs export)
+products.csv
