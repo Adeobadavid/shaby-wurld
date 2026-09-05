@@ -5,7 +5,13 @@ import { client } from "./client";
  * Types
  * ------------------------------------------------------------------ */
 
-export type Shade = { name: string; color: string; enabled: boolean };
+export type Shade = {
+  name: string;
+  color: string;
+  enabled: boolean;
+  /** Photo of the product in this shade. Absent until one is uploaded. */
+  image?: string;
+};
 
 export type Product = {
   _id: string;
@@ -14,6 +20,7 @@ export type Product = {
   category: string;
   price: number;
   compareAtPrice?: number;
+  shortDescription?: string;
   description: string;
   images: string[];
   shades: Shade[];
@@ -67,9 +74,17 @@ const productFields = groq`
   category,
   price,
   compareAtPrice,
+  shortDescription,
   description,
   "images": images[].asset->url,
-  "shades": shades[enabled == true]{ name, color, enabled },
+  // Each shade can carry its own photo; the gallery slides to it when the
+  // swatch is tapped. Null when no photo has been uploaded for that shade.
+  "shades": shades[enabled == true]{
+    name,
+    color,
+    enabled,
+    "image": image.asset->url
+  },
   "inStock": coalesce(inStock, true),
   "featured": coalesce(featured, false)
 `;

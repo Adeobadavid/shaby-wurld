@@ -41,6 +41,7 @@ export const product = defineType({
           { title: "Lip Gloss", value: "Lip Gloss" },
           { title: "Lip Balm", value: "Lip Balm" },
           { title: "Lip Liner", value: "Lip Liner" },
+          { title: "Lip Scrub", value: "Lip Scrub" },
           { title: "Lipstick", value: "Lipstick" },
           { title: "Lip Oil", value: "Lip Oil" },
           { title: "Gift Set", value: "Gift Set" },
@@ -67,11 +68,20 @@ export const product = defineType({
     }),
 
     defineField({
+      name: "shortDescription",
+      title: "Short description",
+      type: "string",
+      description:
+        "One short sentence, shown on the product card. Keep it under ~70 characters or it wraps awkwardly on mobile.",
+      validation: (Rule) => Rule.max(90),
+    }),
+
+    defineField({
       name: "description",
       title: "Description",
       type: "text",
       rows: 4,
-      description: "Shown in Quick View, under the product name.",
+      description: "One or two sentences, shown in Quick View under the product name.",
       validation: (Rule) => Rule.required().max(500),
     }),
 
@@ -126,6 +136,14 @@ export const product = defineType({
                   .error("Must be a 6-digit hex code like #5c3a2e"),
             }),
             defineField({
+              name: "image",
+              title: "Shade photo",
+              type: "image",
+              options: { hotspot: true },
+              description:
+                "Optional. The product in this shade. When set, tapping the swatch in Quick View slides the gallery to this photo.",
+            }),
+            defineField({
               name: "enabled",
               title: "Available",
               type: "boolean",
@@ -134,11 +152,17 @@ export const product = defineType({
             }),
           ],
           preview: {
-            select: { title: "name", subtitle: "color", enabled: "enabled" },
-            prepare({ title, subtitle, enabled }) {
+            select: {
+              title: "name",
+              subtitle: "color",
+              enabled: "enabled",
+              media: "image",
+            },
+            prepare({ title, subtitle, enabled, media }) {
               return {
                 title: enabled === false ? `${title} — off` : title,
                 subtitle,
+                media,
               };
             },
           },
@@ -152,6 +176,15 @@ export const product = defineType({
       type: "boolean",
       description: "Off = shown but cannot be added to bag.",
       initialValue: true,
+    }),
+
+    defineField({
+      name: "stockQty",
+      title: "Units in stock",
+      type: "number",
+      description:
+        "For your own records. Not shown on the site and not decremented automatically — the In stock toggle above is what controls buying.",
+      validation: (Rule) => Rule.min(0).integer(),
     }),
 
     defineField({

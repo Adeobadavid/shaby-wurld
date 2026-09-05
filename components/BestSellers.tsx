@@ -13,7 +13,13 @@ import ProductCard, { ProductCardData } from "./ProductCard";
  * there isn't real inventory for 9 distinct SKUs yet. Categories are real
  * so filtering actually works; swap in real product data once it exists.
  */
-type Category = "Best Seller" | "All Products" | "Lip Gloss" | "Lip Liner" | "Lip Balm";
+type Category =
+  | "Best Seller"
+  | "All Products"
+  | "Lip Gloss"
+  | "Lip Liner"
+  | "Lip Balm"
+  | "Lip Scrub";
 
 const ALL_PRODUCTS: (ProductCardData & { category: Category; featured?: boolean })[] = [
   { id: "1", images: ["/products/placeholder-1.webp"], category: "Lip Gloss", name: "Deep brown glossy shine matte lip gloss", price: "\u20a65,000.00", priceValue: 5000, featured: true, },
@@ -27,7 +33,13 @@ const ALL_PRODUCTS: (ProductCardData & { category: Category; featured?: boolean 
   { id: "9", images: ["/products/placeholder-2.webp"], category: "Lip Balm", name: "Vanilla glow lip balm", price: "\u20a63,500.00", priceValue: 3500 },
 ];
 
-const FILTERS: Category[] = ["Best Seller", "All Products", "Lip Gloss", "Lip Liner", "Lip Balm"];
+/**
+ * Display order for the category tabs. A tab only renders if something in the
+ * catalogue actually uses it, so adding a category in Sanity never leaves an
+ * empty tab on the site, and removing the last product of a kind cleans its
+ * tab up on its own.
+ */
+const CATEGORY_ORDER: Category[] = ["Lip Gloss", "Lip Liner", "Lip Balm", "Lip Scrub"];
 
 /** The Sanity shape, kept loose so this file doesn't import server code. */
 export type SanityProduct = {
@@ -35,9 +47,10 @@ export type SanityProduct = {
   name: string;
   category: string;
   price: number;
+  shortDescription?: string;
   description?: string;
   images: string[];
-  shades?: { name: string; color: string }[];
+  shades?: { name: string; color: string; image?: string }[];
   inStock?: boolean;
   featured?: boolean;
 };
@@ -58,12 +71,19 @@ export default function BestSellers({ products }: { products?: SanityProduct[] }
           name: p.name,
           price: naira(p.price),
           priceValue: p.price,
+          shortDescription: p.shortDescription,
           description: p.description,
           shades: p.shades,
           inStock: p.inStock !== false,
           featured: p.featured === true,
         }))
       : ALL_PRODUCTS;
+
+  const filters: Category[] = [
+    "Best Seller",
+    "All Products",
+    ...CATEGORY_ORDER.filter((c) => all.some((p) => p.category === c)),
+  ];
 
   const visibleProducts =
     active === "Best Seller"
@@ -86,7 +106,7 @@ export default function BestSellers({ products }: { products?: SanityProduct[] }
             push the grid down. Scrolls horizontally rather than wrapping, with
             the scrollbar hidden so it reads as a strip. */}
         <div className="-mx-6 flex w-[calc(100%+48px)] items-center gap-4 overflow-x-auto px-6 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:w-auto sm:flex-wrap sm:gap-8 sm:overflow-visible sm:px-0">
-          {FILTERS.map((filter) => {
+          {filters.map((filter) => {
             const isActive = filter === active;
             return (
               <button

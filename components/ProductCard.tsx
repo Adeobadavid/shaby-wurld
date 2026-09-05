@@ -20,9 +20,12 @@ export type ProductCardData = {
   name: string;
   price: string;
   priceValue: number;
+  /** One line, shown on the card itself. */
+  shortDescription?: string;
+  /** One or two sentences, shown in Quick View. */
   description?: string;
   /** Only enabled shades reach here — disabled ones are filtered out in GROQ. */
-  shades?: { name: string; color: string }[];
+  shades?: { name: string; color: string; image?: string }[];
   inStock?: boolean;
 };
 
@@ -127,6 +130,11 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
           <p className="line-clamp-2 font-body text-[13px] font-medium leading-[1.3] text-[#262626] sm:line-clamp-none sm:text-[16px]">
             {product.name}
           </p>
+          {product.shortDescription && (
+            <p className="line-clamp-2 font-body text-[11px] leading-[1.35] text-[#a79b99] sm:text-[13px]">
+              {product.shortDescription}
+            </p>
+          )}
         </div>
         <p className="mt-auto font-display text-[17px] tracking-[-0.44px] text-[#262626] sm:text-[22px]">
           {product.price}
