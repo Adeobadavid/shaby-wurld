@@ -18,6 +18,11 @@ export default defineConfig({
   projectId,
   dataset,
 
+  // Pins `sanity deploy` to the existing shabywurld.sanity.studio app.
+  // Without this the CLI can ask which target to deploy to and a wrong
+  // answer creates a second Studio on a different URL.
+  deployment: { appId: "gltb51x4hufoo1ami42bfka3" },
+
   schema: { types: schemaTypes },
 
   plugins: [
