@@ -26,6 +26,14 @@ export default async function Home() {
     getReviews(),
   ]);
 
+  /**
+   * The Lip Scrub gets the feature strip rather than a grid tab, so it is
+   * pulled out here and excluded from the grid below — otherwise it would
+   * appear twice on the page.
+   */
+  const featured = products.find((p) => p.category === "Lip Scrub") ?? null;
+  const gridProducts = products.filter((p) => p.category !== "Lip Scrub");
+
   return (
     <main className="relative">
       {/* Hero animates on load, so it isn't wrapped — everything below it
@@ -40,10 +48,10 @@ export default async function Home() {
         <Benefits benefits={settings?.benefits} />
       </Reveal>
       <Reveal>
-        <BestSellers products={products} />
+        <BestSellers products={gridProducts} />
       </Reveal>
       <Reveal>
-        <PerfectLiner />
+        <PerfectLiner product={featured} />
       </Reveal>
       <Reveal>
         <BrandStory

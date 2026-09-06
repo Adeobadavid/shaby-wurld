@@ -112,7 +112,10 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
             e.stopPropagation();
             handleOpenQuickView();
           }}
-          className={`absolute bottom-2 left-3 right-3 flex h-[38px] items-center justify-center bg-sw-blush font-body text-[13px] text-sw-cream transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#95402f] sm:bottom-[15px] sm:left-[25px] sm:right-[25px] sm:h-[50px] sm:translate-y-3 sm:text-[16px] sm:opacity-0 ${
+          // Hidden on mobile: there is no hover to reveal it, so it sat
+          // permanently over the photo and ate the card. Tapping the card
+          // opens Quick View anyway, so nothing is lost.
+          className={`absolute bottom-[15px] left-[25px] right-[25px] hidden h-[50px] items-center justify-center bg-sw-blush font-body text-[16px] text-sw-cream transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#95402f] sm:flex sm:translate-y-3 sm:opacity-0 ${
             hovered ? "sm:translate-y-0 sm:opacity-100" : ""
           }`}
         >

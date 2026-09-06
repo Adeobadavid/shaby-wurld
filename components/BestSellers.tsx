@@ -39,7 +39,7 @@ const ALL_PRODUCTS: (ProductCardData & { category: Category; featured?: boolean 
  * empty tab on the site, and removing the last product of a kind cleans its
  * tab up on its own.
  */
-const CATEGORY_ORDER: Category[] = ["Lip Gloss", "Lip Liner", "Lip Balm", "Lip Scrub"];
+const CATEGORY_ORDER: Category[] = ["Lip Gloss", "Lip Liner", "Lip Balm"];
 
 /** The Sanity shape, kept loose so this file doesn't import server code. */
 export type SanityProduct = {
