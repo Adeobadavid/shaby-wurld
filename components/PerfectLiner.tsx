@@ -92,8 +92,8 @@ export default function PerfectLiner({ product }: { product?: FeatureProduct | n
 
           Mobile keeps the stacked order (copy, then photo) — the composition
           is too wide to read side by side on a phone. */}
-      <div className="flex w-full flex-col items-center gap-10 px-6 sm:aspect-[1920/819] sm:flex-row-reverse sm:items-center sm:gap-0 sm:px-0">
-        <div className="flex w-full flex-col items-start justify-center gap-[30px] sm:w-[42%] sm:items-end sm:pr-8 sm:text-right lg:pr-[70px]">
+      <div className="flex w-full flex-col items-center gap-10 px-6 sm:h-[700px] sm:flex-row-reverse sm:items-center sm:gap-0 sm:px-0">
+        <div className="flex w-full flex-col items-start justify-center gap-[30px] sm:w-[42%] sm:items-end sm:pr-10 sm:text-right lg:pr-[150px]">
           <div className="flex w-full flex-col items-start gap-[30px] sm:items-end">
             <div className="flex flex-col items-start gap-5 sm:items-end">
               <h2 className="font-display text-[32px] leading-[1.1] text-black sm:text-[40px] lg:text-[52px]">
@@ -153,9 +153,12 @@ export default function PerfectLiner({ product }: { product?: FeatureProduct | n
           </div>
         </div>
 
-        {/* object-contain + object-left keeps the jar whole and anchored to
-            the edge; the transparent PNG lets the cream ground show through
-            instead of the image boxing itself in. */}
+        {/* Desktop fills the full 700px height (object-cover, anchored left)
+            so the jar reaches top and bottom rather than letterboxing inside
+            the band. The cut-out is wider than the column, so cover crops the
+            far right of the granules — which is empty space, not product.
+            Mobile keeps contain, where the whole composition must stay
+            visible in a short box. */}
         <div className="relative h-[420px] w-full sm:h-full sm:w-[58%]">
           <Image
             key={image}
@@ -163,7 +166,7 @@ export default function PerfectLiner({ product }: { product?: FeatureProduct | n
             alt={name}
             fill
             sizes="(min-width: 640px) 58vw, 100vw"
-            className="object-contain object-center sm:object-left"
+            className="object-contain object-center sm:object-cover sm:object-left"
           />
         </div>
       </div>
