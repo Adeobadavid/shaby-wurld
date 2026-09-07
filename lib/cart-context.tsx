@@ -24,8 +24,13 @@ export type QuickViewProduct = {
   description: string;
   price: number;
   image: string;
-  /** Enabled shades only — disabled ones are filtered out in the GROQ query. */
-  shades?: { name: string; color: string }[];
+  /**
+   * Enabled shades only — disabled ones are filtered out in the GROQ query.
+   * `image` is that shade's own photo; selecting the swatch shows it in place
+   * of the main one, so a liner's six numbered shades each show their own
+   * product shot rather than one generic picture.
+   */
+  shades?: { name: string; color: string; image?: string }[];
   inStock?: boolean;
 };
 

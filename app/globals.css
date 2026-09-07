@@ -240,3 +240,18 @@ html {
     transition: none;
   }
 }
+
+/* Shade swap in Quick View — the image is remounted on selection, so a short
+   fade stops it snapping in. */
+.sw-shade-fade {
+  animation: sw-shade-fade 260ms ease-out both;
+}
+
+@keyframes sw-shade-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sw-shade-fade { animation: none; }
+}

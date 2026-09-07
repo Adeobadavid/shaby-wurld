@@ -9,26 +9,38 @@ import { useCart } from "@/lib/cart-context";
  * Opens when a product card's "Quick view" button is clicked.
  */
 
-/** Used only when a product has no shades defined in Sanity yet. */
-const FALLBACK_SHADES = [
-  { name: "Cocoa", color: "#5c3a2e" },
-  { name: "Blush", color: "#d68073" },
-  { name: "Espresso", color: "#3d1f16" },
-  { name: "Noir", color: "#2b0e08" },
-  { name: "Ember", color: "#e2431e" },
-  { name: "Chestnut", color: "#6b4438" },
-];
-
 export default function QuickView() {
   const { quickViewProduct, closeQuickView, addItem, openBag } = useCart();
   const [qty, setQty] = useState(1);
   const [shade, setShade] = useState(0);
+  const [lastId, setLastId] = useState<string | null>(null);
+
+  // This overlay is a singleton, so state survives between products. Without
+  // this, opening a liner on shade 3 and then another product would carry
+  // that selection across. Adjusting state during render is React's
+  // documented pattern for resetting on a prop change.
+  if (quickViewProduct && quickViewProduct.id !== lastId) {
+    setLastId(quickViewProduct.id);
+    setShade(0);
+    setQty(1);
+  }
 
   if (!quickViewProduct) return null;
   const p = quickViewProduct;
 
-  const shades = p.shades && p.shades.length > 0 ? p.shades : FALLBACK_SHADES;
-  const selected = shades[shade] ?? shades[0];
+  /**
+   * Only products that genuinely have shades show a selector — currently the
+   * two lip liners. There used to be a hardcoded fallback list here, which
+   * meant every gloss and balm displayed six invented shades that did not
+   * exist and could be "selected" into an order.
+   */
+  const shades = p.shades ?? [];
+  const hasShades = shades.length > 0;
+  const selected = hasShades ? shades[shade] ?? shades[0] : undefined;
+
+  // A shade's own photo replaces the main one, so picking #10 shows the #10
+  // product shot.
+  const displayImage = selected?.image ?? p.image;
   const soldOut = p.inStock === false;
 
   const handleAddToBag = () => {
@@ -37,7 +49,7 @@ export default function QuickView() {
         id: p.id,
         name: p.name,
         variant: selected?.name ?? "",
-        image: p.image,
+        image: displayImage,
         price: p.price,
       },
       qty
@@ -69,7 +81,16 @@ export default function QuickView() {
             shrank it to a thumbnail. */}
         <div className="flex h-[340px] w-full shrink-0 p-[15px] sm:h-auto sm:min-h-[576px] sm:w-[495px] sm:pr-[50px]">
           <div className="relative flex-1 overflow-hidden bg-[#f6f3f3]">
-            <Image src={p.image} alt={p.name} fill sizes="430px" className="object-contain p-[48px]" />
+            {/* key forces a remount on shade change so the new photo fades
+                in rather than swapping mid-decode. */}
+            <Image
+              key={displayImage}
+              src={displayImage}
+              alt={selected?.name ? `${p.name} — shade ${selected.name}` : p.name}
+              fill
+              sizes="430px"
+              className="sw-shade-fade object-contain p-[48px]"
+            />
           </div>
         </div>
 
@@ -90,28 +111,30 @@ export default function QuickView() {
               </p>
             </div>
 
-            <div className="flex flex-col gap-3">
-              <p className="font-body text-[14px] font-medium tracking-[0.28px] text-[#a79b99]">
-                SHADE{selected?.name ? ` — ${selected.name}` : ""}
-              </p>
-              <div className="flex flex-wrap items-center gap-[10px]">
-                {shades.map((s, i) => (
-                  <button
-                    key={`${s.color}-${i}`}
-                    aria-label={s.name}
-                    title={s.name}
-                    aria-pressed={shade === i}
-                    onClick={() => setShade(i)}
-                    className="h-[25px] w-[25px] rounded-full transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:scale-110"
-                    style={{
-                      backgroundColor: s.color,
-                      outline: shade === i ? "2px solid #d68073" : "none",
-                      outlineOffset: "2px",
-                    }}
-                  />
-                ))}
+            {hasShades && (
+              <div className="flex flex-col gap-3">
+                <p className="font-body text-[14px] font-medium tracking-[0.28px] text-[#a79b99]">
+                  SHADE{selected?.name ? ` — ${selected.name}` : ""}
+                </p>
+                <div className="flex flex-wrap items-center gap-[10px]">
+                  {shades.map((s, i) => (
+                    <button
+                      key={`${s.name}-${i}`}
+                      aria-label={`Shade ${s.name}`}
+                      title={s.name}
+                      aria-pressed={shade === i}
+                      onClick={() => setShade(i)}
+                      className="h-[25px] w-[25px] rounded-full transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:scale-110"
+                      style={{
+                        backgroundColor: s.color,
+                        outline: shade === i ? "2px solid #d68073" : "none",
+                        outlineOffset: "2px",
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="flex flex-col gap-3 w-[164px]">
               <p className="font-body text-[14px] font-medium tracking-[0.28px] text-[#a79b99]">
