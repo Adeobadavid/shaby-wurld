@@ -98,10 +98,30 @@ export default function Receipt({ order }: { order: ReceiptData }) {
 
     try {
       const { toPng } = await import("html-to-image");
+
+      /**
+       * Width and height are passed explicitly. Left to itself html-to-image
+       * sizes the foreignObject from the element's own box, which for this
+       * node resolved short — the export came back cut off around halfway.
+       * getBoundingClientRect measures what is actually laid out, and the
+       * matching `style` block pins the clone so the animation transform
+       * cannot shift content out of the captured frame.
+       */
+      const rect = node.getBoundingClientRect();
+
       return await toPng(node, {
         pixelRatio: 2, // legible on retina and when printed
-        backgroundColor: "#fbf7f5", // matches the notch fill
+        backgroundColor: "#ffffff",
         cacheBust: true,
+        width: Math.ceil(rect.width),
+        height: Math.ceil(rect.height),
+        style: {
+          transform: "none",
+          animation: "none",
+          margin: "0",
+          width: `${Math.ceil(rect.width)}px`,
+          height: `${Math.ceil(rect.height)}px`,
+        },
       });
     } finally {
       wrapper.classList.remove("sw-capturing");
@@ -158,7 +178,7 @@ export default function Receipt({ order }: { order: ReceiptData }) {
     <div className="flex w-full max-w-[420px] flex-col items-center">
       {/* Printer housing — blush on cream, the same pairing as the footer bar.
           Sits above the paper so the paper emerges from its cutout. */}
-      <div className="sw-printer-body relative z-20 w-full rounded-[16px] bg-sw-blush p-4 pb-[10px] shadow-[0_18px_40px_-22px_rgba(150,64,47,0.55)]">
+      <div className="sw-printer-body relative z-20 w-full rounded-t-[16px] bg-sw-blush p-4 pb-0 shadow-[0_18px_40px_-22px_rgba(150,64,47,0.55)]">
         <div className="mb-3 flex items-center justify-between">
           <img
             src="/icons/logo-lockup.svg"
@@ -197,17 +217,17 @@ export default function Receipt({ order }: { order: ReceiptData }) {
           </div>
         </div>
 
-        {/* The cutout: a dark recess inset from the housing's edges, with the
-            housing's rounded bottom still visible around it — the paper comes
-            up through this opening, not from under the whole box. */}
-        <div className="mx-auto mt-5 h-[11px] w-[94%] rounded-[3px] bg-[#4a1c13] shadow-[inset_0_3px_6px_rgba(0,0,0,0.55)]" />
+        {/* The cutout, flush with the housing's bottom edge (-mx-4 cancels the
+            padding). The housing previously kept 10px of blush below it, so the
+            paper appeared from the bottom of the box rather than the opening.
+            With the slot as the last thing, the paper's top tucks up INTO it. */}
+        <div className="-mx-4 mt-5 h-[14px] rounded-b-[16px] bg-[#4a1c13] shadow-[inset_0_4px_7px_rgba(0,0,0,0.6)]" />
       </div>
 
-      {/* Paper.
-          The clipping wrapper is FULL width while the paper inside is 86%, so
-          the edge notches have room and are not clipped away — that was why
-          they rendered as odd dots rather than bites. */}
-      <div ref={wrapperRef} className="relative z-10 -mt-[13px] w-full overflow-hidden">
+      {/* Paper. -mt-[9px] lifts its top edge INSIDE the 14px slot, and the
+          housing sits above it on the z-axis, so the sheet reads as coming up
+          through the opening rather than out from behind the box. */}
+      <div ref={wrapperRef} className="relative z-10 -mt-[9px] w-full overflow-hidden">
         <div
           ref={paperRef}
           className="sw-receipt-paper relative mx-auto w-[86%] bg-white drop-shadow-[0_6px_10px_rgba(96,52,40,0.16)]"
@@ -257,12 +277,7 @@ export default function Receipt({ order }: { order: ReceiptData }) {
               </div>
             </div>
 
-            {/* Ticket notches sit on this rule, the way a real receipt is
-                perforated above the total. */}
-            <div className="relative border-t border-dashed border-[#edcac3]">
-              <span className="sw-notch sw-notch-left" aria-hidden="true" />
-              <span className="sw-notch sw-notch-right" aria-hidden="true" />
-            </div>
+            <div className="border-t border-dashed border-[#edcac3]" />
 
             <div className="flex items-baseline justify-between py-4">
               <p className="font-body text-[13px] font-medium uppercase tracking-[0.28px] text-[#a79b99]">

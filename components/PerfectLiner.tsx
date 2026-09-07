@@ -112,7 +112,13 @@ export default function PerfectLiner({ product }: { product?: FeatureProduct | n
         />
 
         <div className="relative flex h-full w-full items-center justify-end">
-          <div className="flex w-[46%] max-w-[560px] flex-col items-end gap-[26px] pr-10 text-right lg:pr-[150px]">
+          {/* As the viewport narrows the granules run further under the copy,
+              and dark red on grey type is unreadable. A panel in the section's
+              own cream sits between them — 88% opacity plus a light blur, so
+              the photo still reads through it rather than being boxed off.
+              Dropped at 2xl, where the composition has room and the text sits
+              clear of the jar. */}
+          <div className="relative flex w-[46%] max-w-[560px] flex-col items-end gap-[26px] rounded-[4px] bg-[#fbf7f5]/[0.88] p-[30px] pr-10 text-right backdrop-blur-[3px] lg:pr-[150px] 2xl:bg-transparent 2xl:p-0 2xl:pr-[150px] 2xl:backdrop-blur-none">
             <h2 className="font-display text-[40px] leading-[1.05] text-black lg:text-[52px]">
               {name}
             </h2>

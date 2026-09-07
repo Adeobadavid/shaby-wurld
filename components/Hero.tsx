@@ -178,8 +178,14 @@ export default function Hero({ eyebrow, headline, subtext, image }: HeroProps = 
             face. It is now the same left/right split as desktop, anchored to
             the bottom of the frame, just with proportionate gaps — the huge
             lg gap and side padding cannot fit in a tablet's width. */}
-        <div className="flex w-full flex-row items-end justify-between gap-8 px-0 sm:gap-10 lg:items-start lg:gap-[730px] lg:px-[175px]">
-          <div className="max-w-[45%] text-left font-body text-[15px] text-white sm:text-[16px] lg:max-w-none lg:pt-[300px] lg:text-[18px]">
+        {/* The gap was a literal lg:gap-[730px] with lg:px-[175px] — 1080px of
+            fixed spacing. On any screen narrower than about 1400px that leaves
+            no room for the text, and the headline was pushed off the right
+            edge. justify-between already spreads the two columns, so the gap
+            only needs to be a minimum, and the side padding scales up rather
+            than jumping straight to 175px at the lg breakpoint. */}
+        <div className="flex w-full flex-row items-end justify-between gap-8 px-0 sm:gap-10 lg:items-start lg:gap-16 lg:px-10 xl:px-[100px] 2xl:px-[175px]">
+          <div className="max-w-[40%] shrink-0 whitespace-nowrap text-left font-body text-[15px] text-white sm:text-[16px] lg:max-w-none lg:pt-[300px] lg:text-[18px]">
             {eyebrowLines.map((line, i) => (
               <span key={i} className="sw-line">
                 <span style={{ animationDelay: `${700 + i * 80}ms` }}>{line}</span>
@@ -187,7 +193,7 @@ export default function Hero({ eyebrow, headline, subtext, image }: HeroProps = 
             ))}
           </div>
 
-          <div className="flex flex-col items-end gap-[9px] text-right text-sw-cream lg:items-start lg:text-left">
+          <div className="flex shrink-0 flex-col items-end gap-[9px] text-right text-sw-cream lg:items-start lg:text-left">
             {/* Headline wipes up line by line, then the supporting copy
                 follows — the eye lands on "Naturally You." first. */}
             <h1 className="font-display text-[44px] font-light leading-none tracking-[-1.6px] sm:text-[60px] lg:text-[80px]">
