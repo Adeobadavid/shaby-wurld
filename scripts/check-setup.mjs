@@ -6,15 +6,31 @@
  */
 import fs from "fs";
 
+/**
+ * Config is split across two files on purpose:
+ *   .env.local  public config, safe to compile into the Worker bundle
+ *   .dev.vars   server secrets, kept out of the bundle (see
+ *               scripts/migrate-secrets.mjs for why)
+ * Both are read here so this reflects what the app actually sees locally.
+ */
 const env = {};
-try {
-  fs.readFileSync(".env.local", "utf8")
-    .split(/\r?\n/)
-    .forEach((l) => {
-      const m = l.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
-      if (m) env[m[1]] = m[2].trim().replace(/^["']|["']$/g, "");
-    });
-} catch {
+let loadedAny = false;
+
+for (const file of [".env.local", ".dev.vars"]) {
+  try {
+    fs.readFileSync(file, "utf8")
+      .split(/\r?\n/)
+      .forEach((l) => {
+        const m = l.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+        if (m) env[m[1]] = m[2].trim().replace(/^["']|["']$/g, "");
+      });
+    loadedAny = true;
+  } catch {
+    // Missing .dev.vars is fine on a machine that only runs `next build`.
+  }
+}
+
+if (!loadedAny) {
   console.log("No .env.local found. Copy .env.example to .env.local first.");
   process.exit(1);
 }

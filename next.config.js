@@ -26,6 +26,12 @@ const nextConfig = {
   // that runs `next start`).
   images: {
     remotePatterns: [{ protocol: "https", hostname: "cdn.sanity.io" }],
+
+    // Resize at Sanity's CDN rather than in the Worker. /_next/image needs
+    // sharp under Node; on Workers it passed images through untouched, so
+    // full-resolution source files were reaching phones. See the loader.
+    loader: "custom",
+    loaderFile: "./sanity/image-loader.ts",
   },
 
   async headers() {

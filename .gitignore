@@ -25,3 +25,11 @@ dist
 
 # Working catalogue spreadsheet (regenerate with scripts/products-csv.mjs export)
 products.csv
+
+# Wrangler local dev secrets — never commit
+.dev.vars
+.dev.vars.*
+
+# Backups made by scripts/migrate-secrets.mjs
+.env.local.backup
+*.backup
