@@ -172,9 +172,14 @@ export default function Hero({ eyebrow, headline, subtext, image }: HeroProps = 
       {/* gap-[222px] equivalent before the headline row (scaled down on smaller screens) */}
       {/* pointer-events-none lets taps reach the photo; children re-enable it
           so the scroll cue still works. */}
-      <div className="pointer-events-none relative hidden w-full flex-1 flex-col px-6 pb-6 pt-8 sm:flex sm:px-10 sm:pb-10 sm:pt-24 lg:px-[70px] lg:pt-[222px]">
-        <div className="flex w-full flex-col items-center gap-6 px-4 sm:gap-16 sm:px-14 lg:flex-row lg:items-start lg:justify-between lg:gap-[730px] lg:px-[175px]">
-          <div className="text-center font-body text-[16px] text-white sm:text-[18px] lg:pt-[300px] lg:text-left">
+      <div className="pointer-events-none relative hidden w-full flex-1 flex-col px-6 pb-6 pt-8 sm:flex sm:px-10 sm:pb-10 sm:pt-10 lg:px-[70px] lg:pt-[222px]">
+        {/* Between sm and lg this used to be a centred column with a large
+            top padding, which dropped the headline straight onto the model's
+            face. It is now the same left/right split as desktop, anchored to
+            the bottom of the frame, just with proportionate gaps — the huge
+            lg gap and side padding cannot fit in a tablet's width. */}
+        <div className="flex w-full flex-row items-end justify-between gap-8 px-0 sm:gap-10 lg:items-start lg:gap-[730px] lg:px-[175px]">
+          <div className="max-w-[45%] text-left font-body text-[15px] text-white sm:text-[16px] lg:max-w-none lg:pt-[300px] lg:text-[18px]">
             {eyebrowLines.map((line, i) => (
               <span key={i} className="sw-line">
                 <span style={{ animationDelay: `${700 + i * 80}ms` }}>{line}</span>
@@ -182,7 +187,7 @@ export default function Hero({ eyebrow, headline, subtext, image }: HeroProps = 
             ))}
           </div>
 
-          <div className="flex flex-col items-center gap-[9px] text-center text-sw-cream lg:items-start lg:text-left">
+          <div className="flex flex-col items-end gap-[9px] text-right text-sw-cream lg:items-start lg:text-left">
             {/* Headline wipes up line by line, then the supporting copy
                 follows — the eye lands on "Naturally You." first. */}
             <h1 className="font-display text-[44px] font-light leading-none tracking-[-1.6px] sm:text-[60px] lg:text-[80px]">

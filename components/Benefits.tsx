@@ -59,41 +59,58 @@ export default function Benefits({ benefits }: { benefits?: BenefitItem[] }) {
     benefits && benefits.length > 0
       ? benefits.map((b) => ({
           label: b.title,
+          sub: b.description,
           iconUrl: b.icon,
           // Reuse the matching built-in icon when the titles line up.
           icon: BENEFITS.find(
             (d) => d.label.toLowerCase() === b.title.trim().toLowerCase()
           )?.icon,
         }))
-      : BENEFITS.map((b) => ({ label: b.label, icon: b.icon, iconUrl: undefined }));
+      : BENEFITS.map((b) => ({
+          label: b.label,
+          sub: undefined,
+          icon: b.icon,
+          iconUrl: undefined,
+        }));
 
   return (
     <div
       data-figma-node="265:1122"
-      className="flex w-full flex-nowrap items-center justify-between gap-2 bg-[#f7eeeb] px-3 py-4 sm:flex-wrap sm:justify-center sm:gap-10 sm:px-[210px] sm:py-8 lg:gap-[50px] lg:px-[420px] lg:py-[35px]"
+      /**
+       * Padding was sm:px-[210px] / lg:px-[420px], which left roughly 400px
+       * of usable width on a tablet — four items could not fit, so the row
+       * wrapped and the strip doubled in height. It now uses the same
+       * horizontal rhythm as the rest of the page and spreads the items
+       * across the full width.
+       */
+      className="flex w-full flex-nowrap items-start justify-between gap-2 bg-[#f7eeeb] px-3 py-4 sm:items-center sm:gap-6 sm:px-10 sm:py-7 lg:gap-10 lg:px-[70px]"
     >
-      {items.map((benefit, i) => (
+      {items.map((benefit) => (
         <div
           key={benefit.label}
-          className="flex min-w-0 flex-1 items-center justify-center gap-2 sm:flex-none sm:gap-10 lg:gap-[50px]"
+          className="group flex min-w-0 flex-1 flex-col items-center gap-1 text-center sm:flex-row sm:items-center sm:gap-3 sm:text-left"
         >
-          {/* Mobile: icon above label, small type, so all four fit one row.
-              The old 210px side padding left almost no room and forced a wrap. */}
-          <div className="group flex min-w-0 flex-col items-center gap-1 text-[#d68073] sm:flex-row sm:gap-[10px]">
-            <span className="shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-[3px] [&>svg]:h-5 [&>svg]:w-5 sm:[&>svg]:h-8 sm:[&>svg]:w-8">
-              {benefit.iconUrl ? (
-                <img src={benefit.iconUrl} alt="" className="h-5 w-5 sm:h-8 sm:w-8" />
-              ) : (
-                benefit.icon
-              )}
-            </span>
-            <span className="text-center font-body text-[10px] font-medium leading-tight sm:whitespace-nowrap sm:text-[16px]">
+          <span className="shrink-0 text-[#d68073] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-[3px] [&>svg]:h-5 [&>svg]:w-5 sm:[&>svg]:h-7 sm:[&>svg]:w-7">
+            {benefit.iconUrl ? (
+              <img src={benefit.iconUrl} alt="" className="h-5 w-5 sm:h-7 sm:w-7" />
+            ) : (
+              benefit.icon
+            )}
+          </span>
+
+          <div className="flex min-w-0 flex-col gap-[2px]">
+            <span className="font-body text-[10px] font-medium leading-tight text-[#d68073] sm:text-[15px] sm:text-[#262626]">
               {benefit.label}
             </span>
+
+            {/* Supporting line, tablet and desktop only — there is no room
+                for a second line of type on a phone. */}
+            {benefit.sub && (
+              <span className="hidden font-body text-[12px] leading-tight text-[#a79b99] sm:block">
+                {benefit.sub}
+              </span>
+            )}
           </div>
-          {i < items.length - 1 && (
-            <span className="hidden h-[27px] w-px bg-[#d68073]/30 sm:block" />
-          )}
         </div>
       ))}
     </div>

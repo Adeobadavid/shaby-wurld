@@ -52,10 +52,14 @@ export default function PerfectLiner({ product }: { product?: FeatureProduct | n
   const shades = product?.shades ?? [];
   const selectedShade = shades[shadeIndex];
 
-  // A shade's own photo wins when it has one, so tapping a swatch changes
-  // the picture as well as the colour.
-  const image =
-    selectedShade?.image ?? product?.images?.[0] ?? FALLBACK.image;
+  /**
+   * Two photos, two jobs. images[0] is the wide banner that spans the whole
+   * band on desktop; images[1] is the upright crop used on mobile and as the
+   * bag thumbnail, where the wide one would be an unreadable sliver.
+   * A shade's own photo wins over both when it has one.
+   */
+  const wideImage = selectedShade?.image ?? product?.images?.[0] ?? FALLBACK.image;
+  const uprightImage = product?.images?.[1] ?? wideImage;
 
   const name = product?.name ?? FALLBACK.name;
   const description = product?.description ?? FALLBACK.description;
@@ -72,7 +76,9 @@ export default function PerfectLiner({ product }: { product?: FeatureProduct | n
         id: product._id,
         name: product.name,
         variant: selectedShade?.name ?? "Default",
-        image,
+        // The bag renders a 92x112 portrait tile, so the upright crop is the
+        // only one that reads at that size.
+        image: uprightImage,
         price: product.price,
       },
       1
@@ -85,88 +91,149 @@ export default function PerfectLiner({ product }: { product?: FeatureProduct | n
       data-figma-node="265:1159"
       className="flex w-full flex-col items-center bg-[#fbf7f5] py-16 sm:py-0"
     >
-      {/* Tablet and desktop: the cut-out sits full-bleed on the left and the
-          copy is right-aligned against it. The photo is a wide transparent
-          PNG, so the section's cream ground shows through around the jar
-          rather than the image carrying its own background.
+      {/* ------------------------------------------------------------------
+          TABLET / DESKTOP — the banner is a background layer spanning the
+          full width, with the copy floated over its right-hand side. It is
+          not a column, so nothing about the photo is cropped horizontally:
+          the granules run the whole width and pass underneath the text.
+          ------------------------------------------------------------------ */}
+      <div className="relative hidden h-[700px] w-full overflow-hidden sm:block">
+        <Image
+          key={wideImage}
+          src={wideImage}
+          alt={name}
+          fill
+          priority={false}
+          sizes="100vw"
+          // cover fills the 700px band; the source is wider than it is tall,
+          // so this scales it up — which is the "zoom in" wanted here. Anchored
+          // left so the jar stays put as the viewport widens.
+          className="scale-[1.12] object-cover object-left"
+        />
 
-          Mobile keeps the stacked order (copy, then photo) — the composition
-          is too wide to read side by side on a phone. */}
-      <div className="flex w-full flex-col items-center gap-10 px-6 sm:h-[700px] sm:flex-row-reverse sm:items-center sm:gap-0 sm:px-0">
-        <div className="flex w-full flex-col items-start justify-center gap-[30px] sm:w-[42%] sm:items-end sm:pr-10 sm:text-right lg:pr-[150px]">
-          <div className="flex w-full flex-col items-start gap-[30px] sm:items-end">
-            <div className="flex flex-col items-start gap-5 sm:items-end">
-              <h2 className="font-display text-[32px] leading-[1.1] text-black sm:text-[40px] lg:text-[52px]">
-                {name}
-              </h2>
-              <p className="max-w-[532px] font-body text-[16px] leading-[1.45] text-[#797979] sm:text-center sm:text-[17px] lg:text-[18px]">
-                {description}
+        <div className="relative flex h-full w-full items-center justify-end">
+          <div className="flex w-[46%] max-w-[560px] flex-col items-end gap-[26px] pr-10 text-right lg:pr-[150px]">
+            <h2 className="font-display text-[40px] leading-[1.05] text-black lg:text-[52px]">
+              {name}
+            </h2>
+
+            <p className="font-body text-[17px] leading-[1.45] text-[#797979] lg:text-[18px]">
+              {description}
+            </p>
+
+            {/* Swatches and price share a row, split by a hairline — the
+                design pairs them rather than stacking. */}
+            <div className="flex items-center gap-4">
+              {shades.length > 0 && (
+                <>
+                  <div className="flex items-center gap-2">
+                    {shades.slice(0, MAX_SWATCHES).map((s, i) => (
+                      <button
+                        key={s.name}
+                        aria-label={s.name}
+                        aria-pressed={shadeIndex === i}
+                        onClick={() => setShadeIndex(i)}
+                        className="h-[25px] w-[25px] rounded-full transition-transform duration-200"
+                        style={{
+                          backgroundColor: s.color,
+                          outline:
+                            shadeIndex === i ? "2px solid #262626" : "2px solid transparent",
+                          outlineOffset: "2px",
+                          transform: shadeIndex === i ? "scale(1.1)" : "scale(1)",
+                        }}
+                      />
+                    ))}
+                    {shades.length > MAX_SWATCHES && (
+                      <span className="ml-1 font-body text-[15px] text-[#a79b99]">
+                        +{shades.length - MAX_SWATCHES}
+                      </span>
+                    )}
+                  </div>
+                  <span className="h-[26px] w-px bg-[#ddd5d4]" />
+                </>
+              )}
+
+              <p className="font-display text-[28px] text-[#262626] lg:text-[32px]">
+                ₦{price.toLocaleString()}.00
               </p>
             </div>
-
-            {shades.length > 0 && (
-              <div className="flex flex-col items-start gap-2 sm:items-end">
-                <p className="font-body text-[13px] uppercase tracking-[0.28px] text-[#a79b99]">
-                  Shade{selectedShade ? ` — ${selectedShade.name}` : ""}
-                </p>
-                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                  {shades.slice(0, MAX_SWATCHES).map((s, i) => (
-                    <button
-                      key={s.name}
-                      aria-label={s.name}
-                      aria-pressed={shadeIndex === i}
-                      onClick={() => setShadeIndex(i)}
-                      className="h-[25px] w-[25px] rounded-full transition-transform duration-200"
-                      style={{
-                        backgroundColor: s.color,
-                        outline:
-                          shadeIndex === i ? "2px solid #262626" : "2px solid transparent",
-                        outlineOffset: "2px",
-                        transform: shadeIndex === i ? "scale(1.1)" : "scale(1)",
-                      }}
-                    />
-                  ))}
-
-                  {/* Overflow count rather than a wrapping row of swatches —
-                      the full set lives in Quick View. */}
-                  {shades.length > MAX_SWATCHES && (
-                    <span className="font-body text-[15px] text-[#a79b99]">
-                      +{shades.length - MAX_SWATCHES}
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <p className="font-display text-[27px] text-[#262626] lg:text-[32px]">
-              ₦{price.toLocaleString()}.00
-            </p>
 
             <button
               onClick={handleAddToCart}
               disabled={!product || soldOut}
-              className="flex w-full max-w-[306px] items-center justify-center gap-[15px] bg-sw-blush py-[15px] font-body text-[16px] text-sw-cream transition-colors duration-300 hover:bg-[#95402f] disabled:cursor-not-allowed disabled:opacity-45 sm:max-w-[420px]"
+              className="flex w-full items-center justify-center gap-[15px] bg-sw-blush py-[15px] font-body text-[16px] text-sw-cream transition-colors duration-300 hover:bg-[#95402f] disabled:cursor-not-allowed disabled:opacity-45"
             >
               {soldOut ? "Sold out" : "Add to Cart"}
               {!soldOut && <img src="/icons/cart.svg" alt="" className="h-5 w-5" />}
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Desktop fills the full 700px height (object-cover, anchored left)
-            so the jar reaches top and bottom rather than letterboxing inside
-            the band. The cut-out is wider than the column, so cover crops the
-            far right of the granules — which is empty space, not product.
-            Mobile keeps contain, where the whole composition must stay
-            visible in a short box. */}
-        <div className="relative h-[420px] w-full sm:h-full sm:w-[58%]">
+      {/* ------------------------------------------------------------------
+          MOBILE — centred copy stacked above the upright crop. The wide
+          banner is unusable at this width, so images[1] is used instead.
+          ------------------------------------------------------------------ */}
+      <div className="flex w-full flex-col items-center gap-5 px-6 sm:hidden">
+        <h2 className="text-center font-display text-[38px] leading-[1.05] text-black">
+          {name}
+        </h2>
+
+        <p className="text-center font-body text-[16px] leading-[1.45] text-[#797979]">
+          {description}
+        </p>
+
+        <div className="flex items-center gap-3">
+          {shades.length > 0 && (
+            <>
+              <div className="flex items-center gap-2">
+                {shades.slice(0, MAX_SWATCHES).map((s, i) => (
+                  <button
+                    key={s.name}
+                    aria-label={s.name}
+                    aria-pressed={shadeIndex === i}
+                    onClick={() => setShadeIndex(i)}
+                    className="h-[25px] w-[25px] rounded-full transition-transform duration-200"
+                    style={{
+                      backgroundColor: s.color,
+                      outline: shadeIndex === i ? "2px solid #262626" : "2px solid transparent",
+                      outlineOffset: "2px",
+                      transform: shadeIndex === i ? "scale(1.1)" : "scale(1)",
+                    }}
+                  />
+                ))}
+                {shades.length > MAX_SWATCHES && (
+                  <span className="ml-1 font-body text-[15px] text-[#a79b99]">
+                    +{shades.length - MAX_SWATCHES}
+                  </span>
+                )}
+              </div>
+              <span className="h-[24px] w-px bg-[#ddd5d4]" />
+            </>
+          )}
+
+          <p className="font-display text-[28px] text-[#262626]">
+            ₦{price.toLocaleString()}.00
+          </p>
+        </div>
+
+        <button
+          onClick={handleAddToCart}
+          disabled={!product || soldOut}
+          className="mt-1 flex w-full items-center justify-center gap-[15px] bg-sw-blush py-[15px] font-body text-[16px] text-sw-cream transition-colors duration-300 hover:bg-[#95402f] disabled:cursor-not-allowed disabled:opacity-45"
+        >
+          {soldOut ? "Sold out" : "Add to Cart"}
+          {!soldOut && <img src="/icons/cart.svg" alt="" className="h-5 w-5" />}
+        </button>
+
+        <div className="relative mt-2 h-[330px] w-full overflow-hidden bg-white">
           <Image
-            key={image}
-            src={image}
+            key={uprightImage}
+            src={uprightImage}
             alt={name}
             fill
-            sizes="(min-width: 640px) 58vw, 100vw"
-            className="object-contain object-center sm:object-cover sm:object-left"
+            sizes="100vw"
+            className="object-cover"
           />
         </div>
       </div>
