@@ -178,7 +178,7 @@ export default function Receipt({ order }: { order: ReceiptData }) {
     <div className="flex w-full max-w-[420px] flex-col items-center">
       {/* Printer housing — blush on cream, the same pairing as the footer bar.
           Sits above the paper so the paper emerges from its cutout. */}
-      <div className="sw-printer-body relative z-20 w-full rounded-t-[16px] bg-sw-blush p-4 pb-0 shadow-[0_18px_40px_-22px_rgba(150,64,47,0.55)]">
+      <div className="sw-printer-body relative z-20 w-full rounded-[16px] bg-sw-blush p-4 pb-[10px] shadow-[0_18px_40px_-22px_rgba(150,64,47,0.55)]">
         <div className="mb-3 flex items-center justify-between">
           <img
             src="/icons/logo-lockup.svg"
@@ -217,17 +217,14 @@ export default function Receipt({ order }: { order: ReceiptData }) {
           </div>
         </div>
 
-        {/* The cutout, flush with the housing's bottom edge (-mx-4 cancels the
-            padding). The housing previously kept 10px of blush below it, so the
-            paper appeared from the bottom of the box rather than the opening.
-            With the slot as the last thing, the paper's top tucks up INTO it. */}
-        <div className="-mx-4 mt-5 h-[14px] rounded-b-[16px] bg-[#4a1c13] shadow-[inset_0_4px_7px_rgba(0,0,0,0.6)]" />
+        {/* The cutout: a dark recess inset from the housing's edges, with the
+            housing's rounded bottom still visible around it. */}
+        <div className="mx-auto mt-5 h-[11px] w-[94%] rounded-[3px] bg-[#4a1c13] shadow-[inset_0_3px_6px_rgba(0,0,0,0.55)]" />
       </div>
 
-      {/* Paper. -mt-[9px] lifts its top edge INSIDE the 14px slot, and the
-          housing sits above it on the z-axis, so the sheet reads as coming up
-          through the opening rather than out from behind the box. */}
-      <div ref={wrapperRef} className="relative z-10 -mt-[9px] w-full overflow-hidden">
+      {/* Paper. The clipping wrapper is FULL width while the paper inside is
+          86%, so the sheet is never clipped at its edges. */}
+      <div ref={wrapperRef} className="relative z-10 -mt-[13px] w-full overflow-hidden">
         <div
           ref={paperRef}
           className="sw-receipt-paper relative mx-auto w-[86%] bg-white drop-shadow-[0_6px_10px_rgba(96,52,40,0.16)]"
