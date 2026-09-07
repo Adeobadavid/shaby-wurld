@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 /**
  * Reviews — Figma node 322:1682. The thin bar under the stars (322:1704)
@@ -93,7 +94,16 @@ export default function Reviews({ reviews }: { reviews?: ReviewItem[] }) {
               slotIndex === 0 ? "border-[1.5px] border-sw-blush" : ""
             }`}
           >
-            <img src={review.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            {/* next/image rather than a plain tag so the Sanity loader
+                resizes these: the sources are 900x900 and the box is at
+                most 241px wide. */}
+            <Image
+              src={review.image}
+              alt=""
+              fill
+              sizes="(min-width: 640px) 241px, 50vw"
+              className="object-cover"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
             <p className="relative font-body text-[14px] leading-[1.316] text-white">{review.caption}</p>
           </div>
