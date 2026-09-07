@@ -73,6 +73,11 @@ export default function Hero({ eyebrow, headline, subtext, image }: HeroProps = 
   const subtextLines = toLines(subtext ?? "Made for every\nskin tone.");
   const heroImage = image ?? "/hero/hero-photo.webp";
 
+  // Mobile sets these as single flowing lines rather than the desktop's
+  // hand-split ones, so any newline in the CMS copy becomes a space.
+  const headlineText = (headline ?? "Naturally You").replace(/\s*\n\s*/g, " ");
+  const subtextText = (subtext ?? "Made for every skin tone.").replace(/\s*\n\s*/g, " ");
+
   return (
     <section
       data-figma-node="265:1105"
@@ -98,12 +103,22 @@ export default function Hero({ eyebrow, headline, subtext, image }: HeroProps = 
           fill
           priority
           sizes="100vw"
-          // Mobile fills the frame (cover) so the photo reaches the edges
-          // instead of being letterboxed and pushed to the bottom. Desktop
-          // keeps contain, where the whole shot needs to stay visible.
+          // Mobile fills the frame edge to edge. Tablet and desktop keep
+          // contain, where the whole composition needs to stay visible.
           className="object-cover object-top sm:object-contain sm:object-bottom"
         />
       </div>
+
+      {/* Scrim, mobile only: the headline sits over her jaw and shoulder,
+          which are mid-tone, so white type needs something underneath it to
+          stay legible. Only covers the lower portion so the face stays clean. */}
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[45%] sm:hidden"
+        style={{
+          background:
+            "linear-gradient(to top, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.35) 38%, transparent 100%)",
+        }}
+      />
 
       {/* Nav — full-width hover strip, matching Figma's Variant2 exactly:
           outer pt-50/px-70/pb-5, inner row gets its own extra pb-30. */}
@@ -138,11 +153,11 @@ export default function Hero({ eyebrow, headline, subtext, image }: HeroProps = 
               )}
             </button>
           </div>
-          <div className="flex items-center gap-4 sm:hidden">
-            <button aria-label="Search" className="h-[28px] w-[20px]">
-              <img src="/icons/search.svg" alt="" className="h-full w-full" />
-            </button>
-            <button aria-label="Bag" onClick={openBag} className="relative h-[26px] w-[20px]">
+          {/* Mobile: bag only. Search was dropped here — there is no search
+              UI behind it yet, and the design puts a single clean action in
+              the corner. */}
+          <div className="flex items-center sm:hidden">
+            <button aria-label="Bag" onClick={openBag} className="relative h-[28px] w-[24px]">
               <img src="/icons/bag.svg" alt="" className="h-full w-full" />
               {count > 0 && (
                 <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-sw-cream text-[10px] font-medium text-sw-blush">
@@ -157,7 +172,7 @@ export default function Hero({ eyebrow, headline, subtext, image }: HeroProps = 
       {/* gap-[222px] equivalent before the headline row (scaled down on smaller screens) */}
       {/* pointer-events-none lets taps reach the photo; children re-enable it
           so the scroll cue still works. */}
-      <div className="pointer-events-none relative flex w-full flex-1 flex-col px-6 pb-6 pt-8 sm:px-10 sm:pb-10 sm:pt-24 lg:px-[70px] lg:pt-[222px]">
+      <div className="pointer-events-none relative hidden w-full flex-1 flex-col px-6 pb-6 pt-8 sm:flex sm:px-10 sm:pb-10 sm:pt-24 lg:px-[70px] lg:pt-[222px]">
         <div className="flex w-full flex-col items-center gap-6 px-4 sm:gap-16 sm:px-14 lg:flex-row lg:items-start lg:justify-between lg:gap-[730px] lg:px-[175px]">
           <div className="text-center font-body text-[16px] text-white sm:text-[18px] lg:pt-[300px] lg:text-left">
             {eyebrowLines.map((line, i) => (
@@ -196,6 +211,49 @@ export default function Hero({ eyebrow, headline, subtext, image }: HeroProps = 
             <ScrollIndicator />
           </div>
         </div>
+      </div>
+
+      {/* ------------------------------------------------------------------
+          MOBILE hero. A separate block rather than responsive classes on the
+          one above: the arrangement genuinely differs — copy anchored bottom
+          left instead of centred, no eyebrow, no scroll cue, and a button
+          that does not exist on desktop. Forcing one tree to be both would
+          need a class on nearly every node.
+          ------------------------------------------------------------------ */}
+      <div className="relative mt-auto flex w-full flex-col items-start gap-2 px-5 pb-8 sm:hidden">
+        <h1 className="font-display text-[52px] font-light leading-[0.95] tracking-[-1.6px] text-white">
+          <span className="sw-line">
+            <span style={{ animationDelay: "150ms" }}>{headlineText}</span>
+          </span>
+        </h1>
+
+        <p className="font-body text-[17px] leading-[1.35] text-white/85">
+          <span className="sw-line">
+            <span style={{ animationDelay: "400ms" }}>{subtextText}</span>
+          </span>
+        </p>
+
+        <a
+          href="#shop"
+          className="sw-fade-up mt-5 flex h-[54px] w-full items-center justify-center gap-3 rounded-full border border-white/60 font-body text-[16px] text-white transition-colors duration-300 active:bg-white/15"
+          style={{ animationDelay: "650ms" }}
+        >
+          Shop products
+          <svg
+            width="22"
+            height="14"
+            viewBox="0 0 24 14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <line x1="0" y1="7" x2="22" y2="7" />
+            <polyline points="16 1 22 7 16 13" />
+          </svg>
+        </a>
       </div>
     </section>
   );
