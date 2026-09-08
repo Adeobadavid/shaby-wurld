@@ -60,6 +60,7 @@ export type Review = {
   text: string;
   rating: number;
   photo?: string;
+  productName?: string;
 };
 
 /* ------------------------------------------------------------------ *
@@ -128,7 +129,9 @@ export const siteSettingsQuery = groq`
 
 export const reviewsQuery = groq`
   *[_type == "review" && published == true] | order(order asc, _createdAt desc) {
-    _id, name, text, rating, "photo": photo.asset->url
+    _id, name, text, rating, "photo": photo.asset->url,
+    // Fills the slot the reference used for an email address.
+    "productName": product->name
   }
 `;
 

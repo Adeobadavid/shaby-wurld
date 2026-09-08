@@ -4,16 +4,22 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 
 /**
- * Reviews carousel, built to the supplied reference: a header block, then a
- * row where the active review's photo is large and centred, its quote sits
- * alongside, and the neighbouring reviews peek in at reduced size.
+ * Reviews — laid out to the supplied reference.
  *
- * Deliberately NOT copied from the reference: it showed each reviewer's email
- * address. Publishing a customer's email is a privacy problem regardless of
- * how the design looks, so the attribution here is a first name and a rating.
+ * Reading left to right: a raised white card for the previous review sitting
+ * low in the band, the active reviewer's portrait with their attribution
+ * BELOW it, their quote to the right, and the next review as a dark card with
+ * its name and rating over the image. The prev arrow floats high on the left,
+ * the next arrow low on the right — the asymmetry is from the reference and
+ * is what stops the row reading as a plain filmstrip.
  *
- * Auto-advances, but any manual navigation resets the timer — otherwise the
- * slide someone just chose gets pulled away mid-read.
+ * Square corners and the site's own type, per the brief; the reference's
+ * rounded cards and grotesque are not used.
+ *
+ * The reference puts each reviewer's EMAIL under their name. That slot here
+ * holds the product they reviewed instead — publishing a customer's email
+ * address is a privacy problem however good it looks, and the product is
+ * more use to a shopper anyway.
  */
 
 const ADVANCE_MS = 6000;
@@ -24,6 +30,7 @@ export type ReviewItem = {
   text: string;
   rating: number;
   photo?: string;
+  productName?: string;
 };
 
 const FALLBACK_PHOTO = "/brand-story/photo-1.webp";
@@ -31,7 +38,6 @@ const FALLBACK_PHOTO = "/brand-story/photo-1.webp";
 export default function Reviews({ reviews }: { reviews?: ReviewItem[] }) {
   const list = reviews ?? [];
   const [index, setIndex] = useState(0);
-  // Bumping this restarts both the auto-advance timer and the progress bar.
   const [cycle, setCycle] = useState(0);
 
   const go = useCallback(
@@ -52,8 +58,8 @@ export default function Reviews({ reviews }: { reviews?: ReviewItem[] }) {
     return () => clearTimeout(timer);
   }, [list.length, cycle, index]);
 
-  // Nothing to show rather than invented testimonials: fake reviews on a real
-  // storefront are a legal problem, not just a design one.
+  // Invented testimonials on a real storefront are a legal problem, not just
+  // a design one, so an empty list renders nothing.
   if (list.length === 0) return null;
 
   const active = list[index];
@@ -63,182 +69,247 @@ export default function Reviews({ reviews }: { reviews?: ReviewItem[] }) {
   return (
     <section
       id="reviews"
-      className="w-full overflow-hidden bg-white px-6 py-20 sm:px-10 sm:py-24 lg:px-[70px]"
+      className="w-full overflow-hidden bg-[#f7f4f2] px-6 py-20 sm:px-10 sm:py-24 lg:px-[70px]"
     >
       {/* Header */}
-      <div className="flex max-w-[620px] flex-col gap-4">
-        <p className="font-body text-[13px] uppercase tracking-[0.18em] text-sw-blush">
-          What they say about us
-        </p>
-        <h2 className="font-display text-[34px] leading-[1.05] text-[#262626] sm:text-[48px] lg:text-[56px]">
-          Reviews from our customers
+      <div className="flex max-w-[560px] flex-col gap-4">
+        <p className="font-body text-[13px] text-[#8b8280]">What they say about us</p>
+        <h2 className="font-display text-[36px] leading-[1.05] text-[#262626] sm:text-[52px] lg:text-[60px]">
+          Reviews from our users
         </h2>
-        <p className="font-body text-[15px] leading-[1.6] text-[#797979] sm:text-[16px]">
+        <p className="font-body text-[14px] leading-[1.65] text-[#8b8280] sm:text-[15px]">
           Real words from people wearing Shaby Wurld — on shade range, on how it
           feels after six hours, and on whether it actually flatters deeper skin.
         </p>
       </div>
 
-      {/* Carousel */}
-      <div className="mt-12 flex items-center gap-4 sm:mt-16 sm:gap-6">
-        <ArrowButton
-          direction="prev"
+      {/* ------------------------------------------------------------------
+          Carousel band. A 4-column grid on desktop so each piece can sit at
+          its own vertical position, which a flex row cannot do without
+          fighting alignment on every child.
+          ------------------------------------------------------------------ */}
+      <div className="relative mt-14 hidden lg:grid lg:grid-cols-[300px_280px_1fr_230px] lg:items-end lg:gap-8">
+        {/* Prev arrow — floats high on the left, over the gap. */}
+        <button
           onClick={() => go(-1)}
           disabled={list.length < 2}
-        />
+          aria-label="Previous review"
+          className="absolute left-[92px] top-[10px] z-20 flex h-[46px] w-[46px] items-center justify-center rounded-full bg-[#262626] text-white transition-colors duration-300 hover:bg-sw-blush disabled:opacity-30"
+        >
+          <Arrow direction="prev" />
+        </button>
 
-        <div className="flex min-w-0 flex-1 items-stretch gap-5 sm:gap-8">
-          {/* Peeking previous — hidden below lg, where there is no room and it
-              would squeeze the active photo to a sliver. */}
-          {list.length > 2 && (
-            <PeekCard review={prev} onClick={() => go(-1)} className="hidden lg:flex" />
-          )}
+        {/* Previous review — raised white card, sitting low. */}
+        <button
+          key={`card-${prev._id}`}
+          onClick={() => go(-1)}
+          aria-label={`Show ${prev.name}'s review`}
+          className="sw-shade-fade mb-[-28px] flex items-center gap-4 bg-white p-5 text-left shadow-[0_18px_44px_-26px_rgba(38,25,22,0.45)] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1"
+        >
+          <div className="relative h-[52px] w-[52px] shrink-0 overflow-hidden rounded-full">
+            <Image src={prev.photo ?? FALLBACK_PHOTO} alt="" fill sizes="52px" className="object-cover" />
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
+            <p className="truncate font-body text-[15px] font-medium text-[#262626]">{prev.name}</p>
+            <p className="truncate font-body text-[12px] text-[#a79b99]">
+              {prev.productName ?? "Verified customer"}
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            <span className="font-body text-[11px] text-[#a79b99]">Grade</span>
+            <div className="flex items-center gap-1.5">
+              <span className="font-body text-[15px] font-medium text-[#262626]">
+                {prev.rating.toFixed(1)}
+              </span>
+              <StarRow rating={prev.rating} size={11} />
+            </div>
+          </div>
+        </button>
 
-          {/* Active photo */}
+        {/* Active portrait, with its attribution underneath. */}
+        <div className="flex flex-col gap-5">
           <div
             key={`photo-${active._id}`}
-            className="sw-shade-fade relative h-[320px] w-[190px] shrink-0 overflow-hidden sm:h-[420px] sm:w-[280px]"
+            className="sw-shade-fade relative h-[300px] w-full overflow-hidden"
           >
             <Image
               src={active.photo ?? FALLBACK_PHOTO}
               alt={`${active.name}, verified customer`}
               fill
-              sizes="(min-width: 640px) 280px, 190px"
+              sizes="280px"
               className="object-cover"
             />
           </div>
-
-          {/* Quote */}
-          <div
-            key={`quote-${active._id}`}
-            className="sw-shade-fade flex min-w-0 flex-1 flex-col justify-center gap-6"
-          >
-            <p className="font-body text-[15px] leading-[1.7] text-[#3d3d3d] sm:text-[17px] lg:text-[18px]">
-              &ldquo;{active.text}&rdquo;
-            </p>
-
-            <div className="flex flex-col gap-2">
-              <p className="font-body text-[15px] font-medium text-[#262626]">
+          <div className="flex items-end justify-between gap-4">
+            <div className="flex min-w-0 flex-col gap-[3px]">
+              <p className="truncate font-body text-[15px] font-medium text-[#262626]">
                 {active.name}
               </p>
-              <div className="flex items-center gap-3">
-                <StarRow rating={active.rating} />
-                <span className="font-body text-[14px] text-[#a79b99]">
+              <p className="truncate font-body text-[12px] text-[#a79b99]">
+                {active.productName ?? "Verified customer"}
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-col items-end gap-1">
+              <span className="font-body text-[11px] text-[#a79b99]">Grade</span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-body text-[15px] font-medium text-[#262626]">
                   {active.rating.toFixed(1)}
                 </span>
+                <StarRow rating={active.rating} size={11} />
               </div>
             </div>
-
-            {/* Progress — restarts with the cycle, so it always reflects the
-                time remaining on the slide actually showing. */}
-            <div className="h-[2px] w-[90px] overflow-hidden bg-[#f2e4d2]">
-              <div
-                key={cycle}
-                className="h-full w-full origin-left animate-[progress-fill_6s_linear] bg-sw-blush"
-              />
-            </div>
           </div>
-
-          {list.length > 1 && (
-            <PeekCard review={next} onClick={() => go(1)} className="hidden lg:flex" />
-          )}
         </div>
 
-        <ArrowButton
-          direction="next"
+        {/* Quote */}
+        <div key={`quote-${active._id}`} className="sw-shade-fade flex flex-col gap-5 pb-16">
+          <p className="font-body text-[14px] leading-[1.85] text-[#a09795]">
+            &ldquo;{active.text}&rdquo;
+          </p>
+          <div className="h-[2px] w-[80px] overflow-hidden bg-[#e6ded9]">
+            <div
+              key={cycle}
+              className="h-full w-full origin-left animate-[progress-fill_6s_linear] bg-sw-blush"
+            />
+          </div>
+        </div>
+
+        {/* Next review — dark card with the name and rating over the photo. */}
+        <button
+          key={`next-${next._id}`}
+          onClick={() => go(1)}
+          aria-label={`Show ${next.name}'s review`}
+          className="sw-shade-fade group relative mb-16 h-[190px] w-full overflow-hidden text-left"
+        >
+          <Image
+            src={next.photo ?? FALLBACK_PHOTO}
+            alt=""
+            fill
+            sizes="230px"
+            className="object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.06]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-4">
+            <p className="truncate font-body text-[14px] font-medium text-white">{next.name}</p>
+            <div className="flex shrink-0 items-center gap-1">
+              <span className="font-body text-[12px] text-white">{next.rating.toFixed(1)}</span>
+              <StarRow rating={next.rating} size={9} light />
+            </div>
+          </div>
+        </button>
+
+        {/* Next arrow — low on the right, mirroring the prev arrow's offset. */}
+        <button
           onClick={() => go(1)}
           disabled={list.length < 2}
-        />
+          aria-label="Next review"
+          className="absolute bottom-[6px] right-[254px] z-20 flex h-[46px] w-[46px] items-center justify-center rounded-full bg-[#262626] text-white transition-colors duration-300 hover:bg-sw-blush disabled:opacity-30"
+        >
+          <Arrow direction="next" />
+        </button>
+      </div>
+
+      {/* ------------------------------------------------------------------
+          Below lg the four-across arrangement has nowhere to go, so it
+          collapses to the active review plus arrows.
+          ------------------------------------------------------------------ */}
+      <div className="mt-12 flex flex-col gap-6 lg:hidden">
+        <div key={`m-photo-${active._id}`} className="sw-shade-fade relative h-[320px] w-full overflow-hidden">
+          <Image
+            src={active.photo ?? FALLBACK_PHOTO}
+            alt={`${active.name}, verified customer`}
+            fill
+            sizes="100vw"
+            className="object-cover"
+          />
+        </div>
+
+        <div key={`m-quote-${active._id}`} className="sw-shade-fade flex flex-col gap-4">
+          <p className="font-body text-[15px] leading-[1.7] text-[#3d3d3d]">
+            &ldquo;{active.text}&rdquo;
+          </p>
+          <div className="flex items-end justify-between gap-4">
+            <div className="flex min-w-0 flex-col gap-[3px]">
+              <p className="truncate font-body text-[15px] font-medium text-[#262626]">
+                {active.name}
+              </p>
+              <p className="truncate font-body text-[12px] text-[#a79b99]">
+                {active.productName ?? "Verified customer"}
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <span className="font-body text-[15px] font-medium text-[#262626]">
+                {active.rating.toFixed(1)}
+              </span>
+              <StarRow rating={active.rating} size={11} />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="h-[2px] w-[80px] overflow-hidden bg-[#e6ded9]">
+            <div
+              key={`m-${cycle}`}
+              className="h-full w-full origin-left animate-[progress-fill_6s_linear] bg-sw-blush"
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => go(-1)}
+              disabled={list.length < 2}
+              aria-label="Previous review"
+              className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-[#262626] text-white transition-colors duration-300 disabled:opacity-30"
+            >
+              <Arrow direction="prev" />
+            </button>
+            <button
+              onClick={() => go(1)}
+              disabled={list.length < 2}
+              aria-label="Next review"
+              className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-[#262626] text-white transition-colors duration-300 disabled:opacity-30"
+            >
+              <Arrow direction="next" />
+            </button>
+          </div>
+        </div>
       </div>
     </section>
   );
 }
 
-/** A neighbouring review: photo with the name and rating over a scrim. */
-function PeekCard({
-  review,
-  onClick,
-  className = "",
-}: {
-  review: ReviewItem;
-  onClick: () => void;
-  className?: string;
-}) {
+function Arrow({ direction }: { direction: "prev" | "next" }) {
   return (
-    <button
-      onClick={onClick}
-      aria-label={`Show ${review.name}'s review`}
-      className={`group relative h-[420px] w-[190px] shrink-0 items-end overflow-hidden opacity-70 transition-opacity duration-500 hover:opacity-100 ${className}`}
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={direction === "prev" ? "rotate-180" : ""}
     >
-      <Image
-        src={review.photo ?? FALLBACK_PHOTO}
-        alt=""
-        fill
-        sizes="190px"
-        className="object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.06]"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
-      <div className="relative flex w-full flex-col items-start gap-1 p-4 text-left">
-        <p className="font-body text-[14px] font-medium text-white">{review.name}</p>
-        <div className="flex items-center gap-1.5">
-          <StarRow rating={review.rating} size={13} light />
-          <span className="font-body text-[12px] text-white/80">
-            {review.rating.toFixed(1)}
-          </span>
-        </div>
-      </div>
-    </button>
-  );
-}
-
-function ArrowButton({
-  direction,
-  onClick,
-  disabled,
-}: {
-  direction: "prev" | "next";
-  onClick: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={direction === "prev" ? "Previous review" : "Next review"}
-      className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full border border-[#ddd5d4] text-[#262626] transition-colors duration-300 hover:border-sw-blush hover:bg-sw-blush hover:text-sw-cream disabled:cursor-not-allowed disabled:opacity-35 sm:h-[52px] sm:w-[52px]"
-    >
-      <svg
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-        className={direction === "prev" ? "rotate-180" : ""}
-      >
-        <line x1="4" y1="12" x2="19" y2="12" />
-        <polyline points="13 6 19 12 13 18" />
-      </svg>
-    </button>
+      <line x1="4" y1="12" x2="19" y2="12" />
+      <polyline points="13 6 19 12 13 18" />
+    </svg>
   );
 }
 
 function StarRow({
   rating,
-  size = 18,
+  size = 12,
   light = false,
 }: {
   rating: number;
   size?: number;
   light?: boolean;
 }) {
-  const colour = light ? "#ffffff" : "#d68073";
+  const colour = light ? "#ffffff" : "#e0a33f";
 
   return (
-    <div className="flex items-center gap-[3px]">
+    <div className="flex items-center gap-[2px]">
       {Array.from({ length: 5 }).map((_, i) => (
         <svg
           key={i}
@@ -247,7 +318,7 @@ function StarRow({
           viewBox="0 0 24 24"
           fill={i < rating ? colour : "none"}
           stroke={colour}
-          strokeWidth="1.2"
+          strokeWidth="1.6"
           aria-hidden="true"
         >
           <path
