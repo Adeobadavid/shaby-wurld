@@ -67,9 +67,11 @@ export default function Reviews({ reviews }: { reviews?: ReviewItem[] }) {
   const next = list[(index + 1) % list.length];
 
   return (
+    // White, and inset rather than full bleed — the band sits on the page
+    // instead of running to its edges the way the footer and hero do.
     <section
       id="reviews"
-      className="w-full overflow-hidden bg-[#f7f4f2] px-6 py-20 sm:px-10 sm:py-24 lg:px-[70px]"
+      className="mx-auto w-full max-w-[1320px] overflow-hidden bg-white px-6 py-20 sm:px-10 sm:py-24 lg:px-[70px]"
     >
       {/* Header */}
       <div className="flex max-w-[560px] flex-col gap-4">
@@ -104,7 +106,10 @@ export default function Reviews({ reviews }: { reviews?: ReviewItem[] }) {
           key={`card-${prev._id}`}
           onClick={() => go(-1)}
           aria-label={`Show ${prev.name}'s review`}
-          className="sw-shade-fade mb-[-28px] flex items-center gap-4 bg-white p-5 text-left shadow-[0_18px_44px_-26px_rgba(38,25,22,0.45)] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1"
+          // The section is white, so the card needs a hairline as well as the
+          // shadow — on the reference's off-white band the fill alone was
+          // enough to separate it.
+          className="sw-shade-fade mb-[-28px] flex items-center gap-4 border border-[#edcac3] bg-white p-5 text-left shadow-[0_18px_44px_-26px_rgba(38,25,22,0.35)] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1"
         >
           <div className="relative h-[52px] w-[52px] shrink-0 overflow-hidden rounded-full">
             <Image src={prev.photo ?? FALLBACK_PHOTO} alt="" fill sizes="52px" className="object-cover" />
