@@ -1,28 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 
 /**
- * Reviews — Figma node 322:1682. The thin bar under the stars (322:1704)
- * is a progress track/fill pair, not decoration — it's the auto-advance
- * progress indicator, confirmed from the raw export (bg-[#f2e4d2] track +
- * bg-[#d68073] fill). Rebuilt as a real auto-advancing carousel: review
- * text/name/rating change together with the highlighted gallery photo
- * every few seconds, with a subtle slide-in on the new photo.
+ * Reviews carousel, built to the supplied reference: a header block, then a
+ * row where the active review's photo is large and centred, its quote sits
+ * alongside, and the neighbouring reviews peek in at reduced size.
  *
- * Array supports up to 10 reviews — only 4 distinct customer photos exist
- * right now so a couple of entries reuse them; add more as real UGC comes in.
+ * Deliberately NOT copied from the reference: it showed each reviewer's email
+ * address. Publishing a customer's email is a privacy problem regardless of
+ * how the design looks, so the attribution here is a first name and a rating.
+ *
+ * Auto-advances, but any manual navigation resets the timer — otherwise the
+ * slide someone just chose gets pulled away mid-read.
  */
 
-const ADVANCE_MS = 5000;
-
-const REVIEWS = [
-  { name: "Tinuade", text: "The lip combo is a bold, all gender inclusive, and modern cosmetic brand which is Global and unapologetically stylish.", rating: 5, image: "/brand-story/photo-1.webp", caption: "@tinuade - Lip Balm and Matte brown gloss" },
-  { name: "Amara", text: "First time trying a Nigerian lip brand and I'm obsessed. The gloss doesn't feel sticky and it actually lasts through lunch.", rating: 5, image: "/brand-story/photo-2.webp", caption: "@amara - Deep brown gloss" },
-  { name: "Chiamaka", text: "Shade range finally makes sense for deeper skin tones. The liner glides on smooth, no tugging at all.", rating: 4, image: "/brand-story/photo-3.webp", caption: "@chiamaka - Rodo Spice liner" },
-  { name: "Feyisayo", text: "Delivery was fast and the packaging alone felt luxury. The lip balm has become a permanent bag item for me.", rating: 5, image: "/products/placeholder-2.webp", caption: "@feyisayo - Natural tinted balm" },
-];
+const ADVANCE_MS = 6000;
 
 export type ReviewItem = {
   _id: string;
@@ -32,93 +26,234 @@ export type ReviewItem = {
   photo?: string;
 };
 
-export default function Reviews({ reviews }: { reviews?: ReviewItem[] }) {
-  const [index, setIndex] = useState(0);
-  const [progressKey, setProgressKey] = useState(0);
+const FALLBACK_PHOTO = "/brand-story/photo-1.webp";
 
-  // Sanity reviews when they exist, the seeded ones otherwise.
-  const list =
-    reviews && reviews.length > 0
-      ? reviews.map((r) => ({
-          name: r.name,
-          text: r.text,
-          rating: r.rating,
-          image: r.photo ?? "/brand-story/photo-1.webp",
-          caption: `@${r.name.toLowerCase().replace(/\s+/g, "")}`,
-        }))
-      : REVIEWS;
+export default function Reviews({ reviews }: { reviews?: ReviewItem[] }) {
+  const list = reviews ?? [];
+  const [index, setIndex] = useState(0);
+  // Bumping this restarts both the auto-advance timer and the progress bar.
+  const [cycle, setCycle] = useState(0);
+
+  const go = useCallback(
+    (direction: 1 | -1) => {
+      if (list.length < 2) return;
+      setIndex((i) => (i + direction + list.length) % list.length);
+      setCycle((c) => c + 1);
+    },
+    [list.length]
+  );
 
   useEffect(() => {
-    if (list.length < 2) return; // nothing to advance through
-    const timer = setInterval(() => {
+    if (list.length < 2) return;
+    const timer = setTimeout(() => {
       setIndex((i) => (i + 1) % list.length);
-      setProgressKey((k) => k + 1);
+      setCycle((c) => c + 1);
     }, ADVANCE_MS);
-    return () => clearInterval(timer);
-  }, [list.length]);
+    return () => clearTimeout(timer);
+  }, [list.length, cycle, index]);
 
-  const active = list[index] ?? list[0];
-  const slots = [0, 1, 2].map((offset) => list[(index + offset) % list.length]);
+  // Nothing to show rather than invented testimonials: fake reviews on a real
+  // storefront are a legal problem, not just a design one.
+  if (list.length === 0) return null;
+
+  const active = list[index];
+  const prev = list[(index - 1 + list.length) % list.length];
+  const next = list[(index + 1) % list.length];
 
   return (
     <section
-      data-figma-node="322:1682"
-      className="flex w-full flex-col items-start gap-12 bg-white px-6 py-20 sm:px-10 sm:py-24 lg:flex-row lg:justify-between lg:px-[130px] lg:py-32"
+      id="reviews"
+      className="w-full overflow-hidden bg-white px-6 py-20 sm:px-10 sm:py-24 lg:px-[70px]"
     >
-      <div className="flex flex-col items-start gap-[78px]">
-        <div className="flex flex-col items-start gap-[13px]">
-          <h2 className="font-display text-[32px] text-black sm:text-[45px]">Reviews</h2>
-          <div className="flex flex-col items-start gap-[25px]">
-            <div key={index} className="flex animate-review-slide flex-col items-start gap-[10px]">
-              <div className="flex items-center gap-[5px]">
-                <span className="h-px w-[21px] bg-[#262626]" />
-                <p className="font-body text-[16px] text-[#262626]">{active.name}</p>
-              </div>
-              <p className="max-w-[343px] pl-[25px] font-body text-[16px] text-[#707070]">{active.text}</p>
-            </div>
-            <div className="pl-[25px]">
-              <StarRow rating={active.rating} />
-            </div>
-          </div>
-        </div>
-        <div className="w-[50px] overflow-hidden bg-[#f2e4d2] pl-[25px]">
-          <div key={progressKey} className="h-[2px] w-full origin-left animate-[progress-fill_5s_linear] bg-sw-blush" />
-        </div>
+      {/* Header */}
+      <div className="flex max-w-[620px] flex-col gap-4">
+        <p className="font-body text-[13px] uppercase tracking-[0.18em] text-sw-blush">
+          What they say about us
+        </p>
+        <h2 className="font-display text-[34px] leading-[1.05] text-[#262626] sm:text-[48px] lg:text-[56px]">
+          Reviews from our customers
+        </h2>
+        <p className="font-body text-[15px] leading-[1.6] text-[#797979] sm:text-[16px]">
+          Real words from people wearing Shaby Wurld — on shade range, on how it
+          feels after six hours, and on whether it actually flatters deeper skin.
+        </p>
       </div>
 
-      <div className="flex w-full flex-wrap items-center gap-5 lg:w-auto lg:flex-nowrap">
-        {slots.map((review, slotIndex) => (
+      {/* Carousel */}
+      <div className="mt-12 flex items-center gap-4 sm:mt-16 sm:gap-6">
+        <ArrowButton
+          direction="prev"
+          onClick={() => go(-1)}
+          disabled={list.length < 2}
+        />
+
+        <div className="flex min-w-0 flex-1 items-stretch gap-5 sm:gap-8">
+          {/* Peeking previous — hidden below lg, where there is no room and it
+              would squeeze the active photo to a sliver. */}
+          {list.length > 2 && (
+            <PeekCard review={prev} onClick={() => go(-1)} className="hidden lg:flex" />
+          )}
+
+          {/* Active photo */}
           <div
-            key={`${index}-${slotIndex}`}
-            className={`relative flex h-[280px] w-full min-w-[200px] flex-1 animate-review-slide items-end overflow-hidden p-[22px] sm:h-[311px] sm:w-[241px] sm:flex-none ${
-              slotIndex === 0 ? "border-[1.5px] border-sw-blush" : ""
-            }`}
+            key={`photo-${active._id}`}
+            className="sw-shade-fade relative h-[320px] w-[190px] shrink-0 overflow-hidden sm:h-[420px] sm:w-[280px]"
           >
-            {/* next/image rather than a plain tag so the Sanity loader
-                resizes these: the sources are 900x900 and the box is at
-                most 241px wide. */}
             <Image
-              src={review.image}
-              alt=""
+              src={active.photo ?? FALLBACK_PHOTO}
+              alt={`${active.name}, verified customer`}
               fill
-              sizes="(min-width: 640px) 241px, 50vw"
+              sizes="(min-width: 640px) 280px, 190px"
               className="object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
-            <p className="relative font-body text-[14px] leading-[1.316] text-white">{review.caption}</p>
           </div>
-        ))}
+
+          {/* Quote */}
+          <div
+            key={`quote-${active._id}`}
+            className="sw-shade-fade flex min-w-0 flex-1 flex-col justify-center gap-6"
+          >
+            <p className="font-body text-[15px] leading-[1.7] text-[#3d3d3d] sm:text-[17px] lg:text-[18px]">
+              &ldquo;{active.text}&rdquo;
+            </p>
+
+            <div className="flex flex-col gap-2">
+              <p className="font-body text-[15px] font-medium text-[#262626]">
+                {active.name}
+              </p>
+              <div className="flex items-center gap-3">
+                <StarRow rating={active.rating} />
+                <span className="font-body text-[14px] text-[#a79b99]">
+                  {active.rating.toFixed(1)}
+                </span>
+              </div>
+            </div>
+
+            {/* Progress — restarts with the cycle, so it always reflects the
+                time remaining on the slide actually showing. */}
+            <div className="h-[2px] w-[90px] overflow-hidden bg-[#f2e4d2]">
+              <div
+                key={cycle}
+                className="h-full w-full origin-left animate-[progress-fill_6s_linear] bg-sw-blush"
+              />
+            </div>
+          </div>
+
+          {list.length > 1 && (
+            <PeekCard review={next} onClick={() => go(1)} className="hidden lg:flex" />
+          )}
+        </div>
+
+        <ArrowButton
+          direction="next"
+          onClick={() => go(1)}
+          disabled={list.length < 2}
+        />
       </div>
     </section>
   );
 }
 
-function StarRow({ rating }: { rating: number }) {
+/** A neighbouring review: photo with the name and rating over a scrim. */
+function PeekCard({
+  review,
+  onClick,
+  className = "",
+}: {
+  review: ReviewItem;
+  onClick: () => void;
+  className?: string;
+}) {
   return (
-    <div className="flex items-center gap-1">
+    <button
+      onClick={onClick}
+      aria-label={`Show ${review.name}'s review`}
+      className={`group relative h-[420px] w-[190px] shrink-0 items-end overflow-hidden opacity-70 transition-opacity duration-500 hover:opacity-100 ${className}`}
+    >
+      <Image
+        src={review.photo ?? FALLBACK_PHOTO}
+        alt=""
+        fill
+        sizes="190px"
+        className="object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.06]"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+      <div className="relative flex w-full flex-col items-start gap-1 p-4 text-left">
+        <p className="font-body text-[14px] font-medium text-white">{review.name}</p>
+        <div className="flex items-center gap-1.5">
+          <StarRow rating={review.rating} size={13} light />
+          <span className="font-body text-[12px] text-white/80">
+            {review.rating.toFixed(1)}
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function ArrowButton({
+  direction,
+  onClick,
+  disabled,
+}: {
+  direction: "prev" | "next";
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={direction === "prev" ? "Previous review" : "Next review"}
+      className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full border border-[#ddd5d4] text-[#262626] transition-colors duration-300 hover:border-sw-blush hover:bg-sw-blush hover:text-sw-cream disabled:cursor-not-allowed disabled:opacity-35 sm:h-[52px] sm:w-[52px]"
+    >
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        className={direction === "prev" ? "rotate-180" : ""}
+      >
+        <line x1="4" y1="12" x2="19" y2="12" />
+        <polyline points="13 6 19 12 13 18" />
+      </svg>
+    </button>
+  );
+}
+
+function StarRow({
+  rating,
+  size = 18,
+  light = false,
+}: {
+  rating: number;
+  size?: number;
+  light?: boolean;
+}) {
+  const colour = light ? "#ffffff" : "#d68073";
+
+  return (
+    <div className="flex items-center gap-[3px]">
       {Array.from({ length: 5 }).map((_, i) => (
-        <svg key={i} width="20" height="20" viewBox="0 0 24 24" fill={i < rating ? "#d68073" : "none"} stroke="#d68073" strokeWidth="1.2">
-          <path d="M12 2.5l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7-5.4-4.8 7.1-.7z" strokeLinejoin="round" />
+        <svg
+          key={i}
+          width={size}
+          height={size}
+          viewBox="0 0 24 24"
+          fill={i < rating ? colour : "none"}
+          stroke={colour}
+          strokeWidth="1.2"
+          aria-hidden="true"
+        >
+          <path
+            d="M12 2.5l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7-5.4-4.8 7.1-.7z"
+            strokeLinejoin="round"
+          />
         </svg>
       ))}
     </div>
