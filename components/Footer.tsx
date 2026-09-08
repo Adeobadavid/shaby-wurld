@@ -4,10 +4,10 @@
  * Restructured to the supplied reference: logo left, two link columns,
  * circular social buttons right, a hairline, then a legal row underneath.
  *
- * The reference is a dark warm brown, and the palette already has one —
- * #4a1c13, used for the receipt's printer slot. Reusing it keeps the footer
- * inside the system rather than introducing a second near-black, and the
- * cream-on-brown pairing is the same one the printer housing uses.
+ * Set in sw-blush on sw-cream — the same pairing as every primary button,
+ * so the footer reads as part of the system rather than a dark slab the
+ * page has nothing else like. Full bleed, on the site's standard
+ * px-6 / sm:px-10 / lg:px-[70px] rhythm.
  *
  * Everything here still comes from Site Settings; only the arrangement
  * changed.
@@ -91,7 +91,7 @@ function SocialButton({ platform, url }: { platform: string; url: string }) {
       rel="noopener noreferrer"
       aria-label={label}
       title={label}
-      className="flex h-[42px] w-[42px] items-center justify-center rounded-full border border-sw-cream/35 text-sw-cream transition-colors duration-300 hover:border-sw-cream hover:bg-sw-cream hover:text-[#4a1c13]"
+      className="flex h-[42px] w-[42px] items-center justify-center rounded-full border border-sw-cream/35 text-sw-cream transition-colors duration-300 hover:border-sw-cream hover:bg-sw-cream hover:text-sw-blush"
     >
       <svg
         width="18"
@@ -146,12 +146,13 @@ export default function Footer({
   const social = socialLinks?.filter((s) => s.url) ?? [];
 
   return (
-    <footer id="contact" className="w-full bg-[#4a1c13]">
-      <div className="mx-auto flex w-full max-w-[1320px] flex-col px-6 pb-8 pt-14 sm:px-10 sm:pt-16 lg:px-[60px]">
+    <footer id="contact" className="w-full bg-sw-blush">
+      <div className="flex w-full flex-col px-6 pb-8 pt-14 sm:px-10 sm:pt-16 lg:px-[70px]">
         {/* Top: identity, links, social */}
         <div className="flex flex-col gap-12 lg:flex-row lg:items-start lg:justify-between lg:gap-16">
           <div className="flex max-w-[300px] flex-col gap-5">
-            {/* The lockup is cream artwork, so it sits on the brown as-is. */}
+            {/* The lockup is cream artwork, so it sits on the blush as-is —
+                the same way it does over the hero photo. */}
             <img
               src="/icons/logo-lockup.svg"
               alt="Shaby Wurld"
