@@ -17,6 +17,17 @@
     "enabled": true
   },
 
+  // Custom domains. Declaring them here means `wrangler deploy` creates the
+  // DNS records and the TLS certificate itself — no dashboard steps.
+  //
+  // www is attached as well so it does not dead-end for anyone who types it.
+  // Both serve the same site; the canonical tag in the page metadata points
+  // at the apex, so search engines treat that as the real address.
+  "routes": [
+    { "pattern": "shabywurld.com", "custom_domain": true },
+    { "pattern": "www.shabywurld.com", "custom_domain": true }
+  ],
+
   "kv_namespaces": [
     {
       // Rate limiting. Workers isolates do not share memory, so the limiter
