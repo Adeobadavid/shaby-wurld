@@ -19,9 +19,41 @@ export const siteSettings = defineType({
     { name: "story", title: "Brand Story" },
     { name: "footer", title: "Footer & Contact" },
     { name: "shipping", title: "Shipping" },
+    { name: "seo", title: "Search & Sharing" },
   ],
 
   fields: [
+    /* ---------------- SEO ---------------- */
+    defineField({
+      name: "seoTitle",
+      title: "Search title",
+      type: "string",
+      group: "seo",
+      description:
+        "The blue headline in Google results and the browser tab. Lead with the brand and what you sell — Google cuts it off past roughly 60 characters.",
+      validation: (Rule) => Rule.max(70),
+    }),
+
+    defineField({
+      name: "seoDescription",
+      title: "Search description",
+      type: "text",
+      rows: 3,
+      group: "seo",
+      description:
+        "The grey text under the title in Google results. It does not affect ranking, but it is what decides whether someone clicks. Aim for 140-160 characters.",
+      validation: (Rule) => Rule.max(180),
+    }),
+
+    defineField({
+      name: "seoImage",
+      title: "Sharing image",
+      type: "image",
+      group: "seo",
+      description:
+        "Shown when the site is shared on WhatsApp, Instagram or X. 1200x630 works everywhere. Falls back to the logo card if empty.",
+    }),
+
     /* ---------------- Hero ---------------- */
     defineField({
       name: "heroEyebrow",

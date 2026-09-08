@@ -32,6 +32,9 @@ export type Benefit = { title: string; description?: string; icon?: string };
 export type SocialLink = { platform: string; url: string };
 
 export type SiteSettings = {
+  seoTitle?: string;
+  seoDescription?: string;
+  seoImage?: string;
   heroEyebrow: string;
   heroHeadline: string;
   heroSubtext: string;
@@ -99,6 +102,9 @@ export const featuredProductsQuery = groq`
 
 export const siteSettingsQuery = groq`
   *[_type == "siteSettings"][0]{
+    seoTitle,
+    seoDescription,
+    "seoImage": seoImage.asset->url,
     heroEyebrow,
     heroHeadline,
     heroSubtext,

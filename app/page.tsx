@@ -6,6 +6,7 @@ import BrandStory from "@/components/BrandStory";
 import Reviews from "@/components/Reviews";
 import Footer from "@/components/Footer";
 import Reveal from "@/components/Reveal";
+import StructuredData from "@/components/StructuredData";
 
 import { getProducts, getReviews, getSiteSettings } from "@/sanity/queries";
 
@@ -36,6 +37,11 @@ export default async function Home() {
 
   return (
     <main className="relative">
+      <StructuredData
+        settings={settings}
+        products={products}
+        siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}
+      />
       {/* Hero animates on load, so it isn't wrapped — everything below it
           reveals as you scroll to it. */}
       <Hero
