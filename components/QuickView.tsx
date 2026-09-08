@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useCart } from "@/lib/cart-context";
+import { useCurrency } from "@/lib/currency-context";
 
 /**
  * Quick View overlay — Figma node 265:1268 ("Desktop - 4").
@@ -10,6 +11,7 @@ import { useCart } from "@/lib/cart-context";
  */
 
 export default function QuickView() {
+  const { format } = useCurrency();
   const { quickViewProduct, closeQuickView, addItem, openBag } = useCart();
   const [qty, setQty] = useState(1);
   const [shade, setShade] = useState(0);
@@ -107,7 +109,7 @@ export default function QuickView() {
               {/* Canela (font-display), matching how prices are set on the
                   product cards and the receipt total. */}
               <p className="mt-[12px] font-display text-[24px] text-[#262626] sm:text-[28px]">
-                ₦{p.price.toLocaleString()}.00
+                {format(p.price)}
               </p>
             </div>
 

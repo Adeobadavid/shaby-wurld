@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useCart } from "@/lib/cart-context";
+import { useCurrency } from "@/lib/currency-context";
 
 /**
  * Step 1 of the cart drawer — Figma node 265:1351.
@@ -11,6 +12,7 @@ import { useCart } from "@/lib/cart-context";
  * moving rather than two separate modals.
  */
 export default function BagPanel() {
+  const { format } = useCurrency();
   const { items, closeDrawer, openCheckout, updateQty, removeItem, subtotal, count } = useCart();
 
   return (
@@ -45,7 +47,7 @@ export default function BagPanel() {
           <p className="py-10 text-center font-body text-[14px] text-[#a79b99]">Your bag is empty.</p>
         )}
         {items.map((item) => (
-          <div key={item.id} className="flex flex-col gap-[27px]">
+          <div key={item.lineId} className="flex flex-col gap-[27px]">
             <div className="flex w-full items-end gap-[13px]">
               <div className="relative h-[112px] w-[92px] shrink-0 overflow-hidden">
                 <Image
@@ -66,7 +68,7 @@ export default function BagPanel() {
                     <div className="flex items-center gap-[10px] border border-[#ddd5d4] px-[5px] py-[2px]">
                       <button
                         aria-label="Decrease quantity"
-                        onClick={() => updateQty(item.id, item.qty - 1)}
+                        onClick={() => updateQty(item.lineId, item.qty - 1)}
                         className="px-1 text-[#565656] transition-colors hover:text-sw-blush"
                       >
                         −
@@ -74,18 +76,18 @@ export default function BagPanel() {
                       <span className="px-1 font-body text-[14px] text-[#565656]">{item.qty}</span>
                       <button
                         aria-label="Increase quantity"
-                        onClick={() => updateQty(item.id, item.qty + 1)}
+                        onClick={() => updateQty(item.lineId, item.qty + 1)}
                         className="px-1 text-[#565656] transition-colors hover:text-sw-blush"
                       >
                         +
                       </button>
                     </div>
                     <p className="font-body text-[14px] font-medium text-black">
-                      ₦{(item.price * item.qty).toLocaleString()}
+                      {format(item.price * item.qty)}
                     </p>
                   </div>
                   <button
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => removeItem(item.lineId)}
                     className="text-left font-body text-[12px] text-[#a79b99] underline transition-colors hover:text-sw-blush"
                   >
                     Remove
@@ -103,7 +105,7 @@ export default function BagPanel() {
         <div className="flex flex-col gap-[10px] font-body text-[14px]">
           <div className="flex justify-between font-medium text-[#3d3d3d]">
             <p>Subtotal</p>
-            <p>₦{subtotal.toLocaleString()}</p>
+            <p>{format(subtotal)}</p>
           </div>
           <p className="text-[#a79b99]">
             Free shipping on orders over ₦50,000. Delivery fee confirmed via WhatsApp.

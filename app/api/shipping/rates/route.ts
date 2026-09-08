@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 import { formatFullAddress, shippingRatesSchema, validationError } from "@/lib/validation";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { fetchRates, validateAddress } from "@/lib/shipbubble";
-import { priceCart, OrderError } from "@/lib/orders";
+import { priceCart, OrderError, INTERNATIONAL_FLAT_TOKEN } from "@/lib/orders";
+import { isDomestic } from "@/lib/regions";
+import { getSiteSettings } from "@/sanity/queries";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,6 +44,43 @@ export async function POST(request: Request) {
     // Price server-side so Shipbubble gets real declared values, and so a
     // bad cart fails here rather than at payment.
     const cart = await priceCart(items);
+
+    /**
+     * Shipbubble is a Nigerian carrier aggregator and cannot quote anywhere
+     * else — asking it to would fail address validation, not return an empty
+     * list. Overseas orders get a single flat rate from Site Settings instead,
+     * which is honest about being an estimate the courier confirms later.
+     */
+    if (!isDomestic(customer.country)) {
+      const settings = await getSiteSettings();
+      const fee = settings?.internationalShippingFee ?? 0;
+
+      if (fee <= 0) {
+        return NextResponse.json(
+          {
+            error:
+              "We can't quote delivery to that country online yet. Message us on WhatsApp and we'll arrange it.",
+          },
+          { status: 400 }
+        );
+      }
+
+      return NextResponse.json({
+        rates: [
+          {
+            courierId: "international-flat",
+            courierName: "International delivery",
+            serviceCode: "",
+            amount: fee,
+            deliveryEta: "7–14 business days",
+            // Nothing to re-verify against a carrier, so the checkout
+            // recognises this token and re-reads the fee from Sanity itself.
+            requestToken: INTERNATIONAL_FLAT_TOKEN,
+          },
+        ],
+        subtotal: cart.subtotal,
+      });
+    }
 
     const toAddressCode = await validateAddress({
       name: customer.fullName,

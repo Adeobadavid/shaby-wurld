@@ -21,17 +21,12 @@ type Category =
   | "Lip Balm"
   | "Lip Scrub";
 
-const ALL_PRODUCTS: (ProductCardData & { category: Category; featured?: boolean })[] = [
-  { id: "1", images: ["/products/placeholder-1.webp"], category: "Lip Gloss", name: "Deep brown glossy shine matte lip gloss", price: "\u20a65,000.00", priceValue: 5000, featured: true, },
-  { id: "2", images: ["/products/placeholder-3.webp"], category: "Lip Gloss", name: "Deep brown glossy shine matte lip gloss", price: "\u20a65,000.00", priceValue: 5000, featured: true },
-  { id: "3", images: ["/products/placeholder-2.webp"], category: "Lip Balm", name: "Natural tinted lip balm", price: "\u20a63,500.00", priceValue: 3500, featured: true },
-  { id: "4", images: ["/products/placeholder-1.webp"], category: "Lip Gloss", name: "Rose shimmer glaze lip gloss", price: "\u20a65,000.00", priceValue: 5000 },
-  { id: "5", images: ["/products/placeholder-3.webp"], category: "Lip Gloss", name: "Copper glow lip gloss", price: "\u20a65,000.00", priceValue: 5000 },
-  { id: "6", images: ["/products/placeholder-2.webp"], category: "Lip Balm", name: "Berry tint hydrating lip balm", price: "\u20a63,500.00", priceValue: 3500 },
-  { id: "7", images: ["/products/placeholder-1.webp"], category: "Lip Liner", name: "Deep brown glossy lip liner", price: "\u20a64,200.00", priceValue: 4200 },
-  { id: "8", images: ["/products/placeholder-3.webp"], category: "Lip Liner", name: "Rose nude lip liner", price: "\u20a64,200.00", priceValue: 4200 },
-  { id: "9", images: ["/products/placeholder-2.webp"], category: "Lip Balm", name: "Vanilla glow lip balm", price: "\u20a63,500.00", priceValue: 3500 },
-];
+/**
+ * Shown when Sanity has no products at all. Previously this was a list of
+ * nine placeholder products with stock photos, which meant an empty CMS
+ * rendered a fake catalogue customers could click into.
+ */
+const EMPTY_STATE = [] as (ProductCardData & { category: Category; featured?: boolean })[];
 
 /**
  * Display order for the category tabs. A tab only renders if something in the
@@ -55,8 +50,6 @@ export type SanityProduct = {
   featured?: boolean;
 };
 
-const naira = (n: number) => `₦${n.toLocaleString()}.00`;
-
 export default function BestSellers({ products }: { products?: SanityProduct[] }) {
   const [active, setActive] = useState<Category>("Best Seller");
 
@@ -69,7 +62,6 @@ export default function BestSellers({ products }: { products?: SanityProduct[] }
           images: p.images?.length ? p.images : ["/products/placeholder-1.webp"],
           category: p.category as Category,
           name: p.name,
-          price: naira(p.price),
           priceValue: p.price,
           shortDescription: p.shortDescription,
           description: p.description,
@@ -77,7 +69,7 @@ export default function BestSellers({ products }: { products?: SanityProduct[] }
           inStock: p.inStock !== false,
           featured: p.featured === true,
         }))
-      : ALL_PRODUCTS;
+      : EMPTY_STATE;
 
   const filters: Category[] = [
     "Best Seller",
@@ -98,14 +90,19 @@ export default function BestSellers({ products }: { products?: SanityProduct[] }
       data-figma-node="265:1145"
       className="w-full bg-white px-6 py-16 sm:px-10 sm:py-20 lg:px-[70px] lg:py-24"
     >
-      <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:mb-10 sm:flex-row sm:items-center sm:gap-6">
+      {/* Sticks to the top while the grid scrolls past, so switching category
+          never means scrolling back up. `top-0` with the section's own white
+          background behind it, and a hairline that only appears once stuck.
+          It releases naturally at the end of the section because a sticky
+          element cannot leave its parent. */}
+      <div className="sticky top-0 z-30 -mx-6 mb-8 flex flex-col items-start justify-between gap-4 border-b border-transparent bg-white px-6 pb-3 pt-4 sm:-mx-10 sm:mb-10 sm:flex-row sm:items-center sm:gap-6 sm:px-10 lg:-mx-[70px] lg:px-[70px]">
         <h2 className="font-display text-[28px] font-light text-[#262626] sm:text-[40px]">
           {active}
         </h2>
         {/* One line on mobile: the filters used to wrap onto a second row and
             push the grid down. Scrolls horizontally rather than wrapping, with
             the scrollbar hidden so it reads as a strip. */}
-        <div className="-mx-6 flex w-[calc(100%+48px)] items-center gap-4 overflow-x-auto px-6 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:w-auto sm:flex-wrap sm:gap-8 sm:overflow-visible sm:px-0">
+        <div className="flex w-full items-center gap-4 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:w-auto sm:flex-wrap sm:gap-8 sm:overflow-visible">
           {filters.map((filter) => {
             const isActive = filter === active;
             return (

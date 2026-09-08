@@ -77,4 +77,12 @@ export function generateOrderNumber(): string {
 }
 
 /** An error whose message is safe to show the customer. */
+/**
+ * Marks a shipping quote that did not come from a carrier. Shipbubble
+ * only covers Nigeria, so overseas orders carry a flat fee read from
+ * Site Settings; this token tells the checkout to re-read that fee
+ * rather than trying to re-verify a quote no carrier ever issued.
+ */
+export const INTERNATIONAL_FLAT_TOKEN = "international-flat";
+
 export class OrderError extends Error {}

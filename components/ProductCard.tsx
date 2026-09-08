@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useCart } from "@/lib/cart-context";
+import { useCurrency } from "@/lib/currency-context";
 
 /**
  * Product card — Figma node 322:1741 (Default/Variant2 hover states).
@@ -18,7 +19,6 @@ export type ProductCardData = {
   images: string[];
   category: string;
   name: string;
-  price: string;
   priceValue: number;
   /** One line, shown on the card itself. */
   shortDescription?: string;
@@ -32,6 +32,7 @@ export type ProductCardData = {
 const SLIDE_DELAY_MS = 1400;
 
 export default function ProductCard({ product }: { product: ProductCardData }) {
+  const { format } = useCurrency();
   const [index, setIndex] = useState(0);
   const [hovered, setHovered] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -140,7 +141,7 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
           )}
         </div>
         <p className="mt-auto font-display text-[17px] tracking-[-0.44px] text-[#262626] sm:text-[22px]">
-          {product.price}
+          {format(product.priceValue)}
         </p>
       </div>
     </div>

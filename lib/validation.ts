@@ -1,4 +1,9 @@
 import { z } from "zod";
+import { COUNTRIES } from "./regions";
+
+const COUNTRY_NAMES: Record<string, string> = Object.fromEntries(
+  COUNTRIES.map((c) => [c.code, c.name])
+);
 
 /**
  * Request validation.
@@ -30,6 +35,9 @@ export const customerSchema = z.object({
   // it is not optional polish — rates simply fail without it.
   state: z.string().min(2).max(100),
   postalCode: z.string().max(20).optional().default(""),
+  // ISO code, or "OTHER". Decides whether live courier rates apply and
+  // which country goes on the address Shipbubble validates.
+  country: z.string().min(2).max(20).optional().default("NG"),
 });
 
 /**
@@ -40,8 +48,12 @@ export function formatFullAddress(c: {
   address: string;
   city: string;
   state: string;
+  country?: string;
 }): string {
-  return [c.address, c.city, c.state, "Nigeria"]
+  // Was hardcoded to Nigeria, which put the wrong country on every overseas
+  // address handed to Shipbubble.
+  const country = COUNTRY_NAMES[c.country ?? "NG"] ?? "Nigeria";
+  return [c.address, c.city, c.state, country]
     .map((part) => part.trim())
     .filter(Boolean)
     .join(", ");

@@ -6,6 +6,7 @@
  * hello.builtbydave@gmail.com) are template placeholder values, not
  * Shaby Wurld's real contact info — swap these before launch.
  */
+import CurrencySwitcher from "./CurrencySwitcher";
 
 const SHOP_LINKS = ["All Products", "Lip Gloss", "Lip Liner", "Lip Balm"];
 const SOCIAL_LINKS = ["Instagram", "Facebook", "Whatsapp"];
@@ -116,7 +117,9 @@ export default function Footer({
         </div>
 
         <div className="flex w-full flex-col items-start gap-2 bg-sw-blush px-6 py-[27px] text-[14px] text-sw-cream sm:flex-row sm:items-center sm:justify-between sm:px-10 lg:px-[60px]">
-          <p className="font-body">UK - English</p>
+          {/* Replaces a hardcoded "UK - English" that was neither true nor
+              interactive. */}
+          <CurrencySwitcher />
           <p className="font-body">{note}</p>
         </div>
       </div>

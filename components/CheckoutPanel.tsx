@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import ShippingRates, { type Rate } from "./ShippingRates";
+import { useCurrency } from "@/lib/currency-context";
+import { COUNTRIES, NIGERIAN_STATES, currencyForCountry, isDomestic } from "@/lib/regions";
 
 /**
  * Step 2 of the cart drawer — Figma node 265:1299.
@@ -19,6 +21,7 @@ export default function CheckoutPanel({
 }: {
   freeShippingThreshold?: number;
 }) {
+  const { format, setCurrency, currency } = useCurrency();
   const { closeDrawer, backToBag, items, subtotal } = useCart();
 
   const [form, setForm] = useState({
@@ -29,6 +32,7 @@ export default function CheckoutPanel({
     city: "",
     state: "",
     postalCode: "",
+    country: "NG",
   });
 
   const [rates, setRates] = useState<Rate[]>([]);
@@ -46,11 +50,25 @@ export default function CheckoutPanel({
     form.city.trim().length > 1 &&
     form.state.trim().length > 1;
 
+  const domestic = isDomestic(form.country);
+
   const freeShipping = freeShippingThreshold > 0 && subtotal >= freeShippingThreshold;
   const shippingCost = freeShipping ? 0 : selectedRate?.amount ?? 0;
   const total = subtotal + shippingCost;
 
-  const canContinue = addressReady && items.length > 0 && !submitting;
+  /**
+   * A delivery method must be chosen before paying — unless the order
+   * qualifies for free shipping, where there is nothing to choose.
+   *
+   * Without the rate checks the button went live the moment the address was
+   * valid, so a customer could pay while rates were still loading and the
+   * order would be created with no courier and no delivery fee. `!loadingRates`
+   * matters as much as the selection: rates arrive asynchronously, and the
+   * previous address's selection is still in state until they do.
+   */
+  const deliveryReady = freeShipping || (!loadingRates && selectedRate !== null);
+
+  const canContinue = addressReady && deliveryReady && items.length > 0 && !submitting;
 
   /* ----------------------------------------------------------------- *
    * Fetch delivery rates.
@@ -67,6 +85,12 @@ export default function CheckoutPanel({
     const id = ++requestId.current;
     setLoadingRates(true);
     setRatesError("");
+
+    // Drop the previous address's choice immediately. Leaving it in place
+    // meant the summary kept showing a courier and fee that no longer applied
+    // to the address on screen.
+    setRates([]);
+    setSelectedRate(null);
 
     try {
       const res = await fetch("/api/shipping/rates", {
@@ -157,7 +181,7 @@ export default function CheckoutPanel({
 
   const field = (key: keyof typeof form) => ({
     value: form[key],
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
       setForm((f) => ({ ...f, [key]: e.target.value })),
   });
 
@@ -222,6 +246,33 @@ export default function CheckoutPanel({
 
         <div className="flex flex-col gap-7">
           <p className="font-body text-[12px] font-semibold text-black">SHIPPING ADDRESS</p>
+
+          {/* Country first: it decides whether the state field is a dropdown,
+              whether live courier rates are available, and which currency the
+              totals are shown in. */}
+          <label className="flex flex-col gap-[14px]">
+            <span className="font-body text-[10px] font-medium text-[#a79b99]">COUNTRY</span>
+            <select
+              autoComplete="country-name"
+              value={form.country}
+              onChange={(e) => {
+                const code = e.target.value;
+                // Clearing the state on a country change stops a Nigerian
+                // state travelling to a US address, where it would fail
+                // validation with no obvious cause.
+                setForm((f) => ({ ...f, country: code, state: "" }));
+                setCurrency(currencyForCountry(code));
+              }}
+              className={`${inputClass} bg-transparent`}
+            >
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
           <label className="flex flex-col gap-[14px]">
             <span className="font-body text-[10px] font-medium text-[#a79b99]">FULL NAME</span>
             <input
@@ -254,16 +305,38 @@ export default function CheckoutPanel({
               />
             </label>
             {/* State is required, not optional — Shipbubble cannot validate an
-                address without it, and rates fail outright. */}
+                address without it, and rates fail outright.
+
+                A dropdown inside Nigeria because Shipbubble matches on exact
+                state names, and free text ("Lagos State", "lagos") failed
+                validation. Free text everywhere else, since no list would be
+                right for every country. */}
             <label className="flex flex-1 flex-col gap-[14px]">
-              <span className="font-body text-[10px] font-medium text-[#a79b99]">STATE</span>
-              <input
-                type="text"
-                autoComplete="address-level1"
-                placeholder="Lagos"
-                {...field("state")}
-                className={inputClass}
-              />
+              <span className="font-body text-[10px] font-medium text-[#a79b99]">
+                {domestic ? "STATE" : "STATE / REGION"}
+              </span>
+              {domestic ? (
+                <select
+                  autoComplete="address-level1"
+                  {...field("state")}
+                  className={`${inputClass} bg-transparent`}
+                >
+                  <option value="">Select a state</option>
+                  {NIGERIAN_STATES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  autoComplete="address-level1"
+                  placeholder="California"
+                  {...field("state")}
+                  className={inputClass}
+                />
+              )}
             </label>
           </div>
           <label className="flex flex-col gap-[14px]">
@@ -296,16 +369,30 @@ export default function CheckoutPanel({
             <p>
               {itemCount} item{itemCount === 1 ? "" : "s"}
             </p>
-            <p>₦{subtotal.toLocaleString()}</p>
+            <p>{format(subtotal)}</p>
           </div>
           <div className="flex items-center justify-between">
             <p>Delivery{selectedRate ? ` · ${selectedRate.courierName}` : ""}</p>
-            <p>{shippingCost === 0 ? (freeShipping ? "Free" : "—") : `₦${shippingCost.toLocaleString()}`}</p>
+            <p>{shippingCost === 0 ? (freeShipping ? "Free" : "—") : format(shippingCost)}</p>
           </div>
           <div className="flex items-center justify-between border-t border-[#e3dbd9] pt-2 font-medium text-black">
             <p>Total</p>
-            <p>₦{total.toLocaleString()}</p>
+            <p>{format(total)}</p>
           </div>
+
+          {/* Converted prices are a convenience; the charge is in naira
+              because the Paystack account is Nigerian. Saying so here means
+              nobody meets that fact for the first time on a bank statement,
+              and the exchange rate is the card issuer's, not ours. */}
+          {currency !== "NGN" && (
+            <p className="pt-1 font-body text-[11px] leading-[1.4] text-[#a79b99]">
+              Prices shown in {currency} are approximate. You will be charged{" "}
+              <span className="font-medium text-[#3d3d3d]">
+                ₦{total.toLocaleString()}
+              </span>{" "}
+              — your bank converts at its own rate.
+            </p>
+          )}
         </div>
       </div>
 
@@ -316,11 +403,24 @@ export default function CheckoutPanel({
             {submitError}
           </p>
         )}
+        {/* Says WHY the button is inactive. Disabled with no explanation reads
+            as broken, and delivery is the least obvious of the reasons. */}
+        {!canContinue && !submitting && items.length > 0 && (
+          <p className="text-center font-body text-[12px] text-[#a79b99]">
+            {!addressReady
+              ? "Fill in your contact and delivery address to continue."
+              : loadingRates
+              ? "Finding delivery options…"
+              : "Choose a delivery option to continue."}
+          </p>
+        )}
         <button
           disabled={!canContinue}
           onClick={handleSubmit}
           className={`flex h-[50px] w-full items-center justify-center gap-[15px] font-body text-[16px] font-semibold text-sw-cream transition-colors duration-300 ${
-            canContinue ? "bg-sw-blush hover:bg-[#95402f] active:scale-[0.99]" : "bg-[#edcac3]"
+            canContinue
+              ? "bg-sw-blush hover:bg-[#95402f] active:scale-[0.99]"
+              : "cursor-not-allowed bg-[#edcac3]"
           }`}
         >
           <img src="/icons/cart.svg" alt="" className="h-5 w-5" />

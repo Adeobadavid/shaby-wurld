@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { Instrument_Sans } from "next/font/google";
 import { CartProvider } from "@/lib/cart-context";
 import { getSiteSettings } from "@/sanity/queries";
+import { headers } from "next/headers";
+import { CurrencyProvider } from "@/lib/currency-context";
+import { currencyForCountry } from "@/lib/regions";
+import { getExchangeRates } from "@/lib/exchange-rates";
 import QuickView from "@/components/QuickView";
 import CartDrawer from "@/components/CartDrawer";
 import "./globals.css";
@@ -16,7 +20,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 const FALLBACK_TITLE = "Shaby Wurld — Lip gloss, liner and balm for every skin tone";
 const FALLBACK_DESCRIPTION =
-  "Bold, inclusive lip colour made for deeper skin tones. Glosses, twist-up liners, tinted balms and lip scrub, delivered across Nigeria.";
+  "Bold, inclusive lip colour made for deeper skin tones. Glosses, twist-up liners, tinted balms and lip scrub, shipped from Lagos worldwide.";
 
 /**
  * Built at request time so the search title and description are editable in
@@ -47,6 +51,8 @@ export async function generateMetadata(): Promise<Metadata> {
       "tinted lip balm",
       "lip scrub",
       "inclusive makeup Nigeria",
+      "Nigerian beauty brand international shipping",
+      "African lip products worldwide",
       "Shaby Wurld",
     ],
     alternates: { canonical: "/" },
@@ -80,21 +86,35 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  /**
+   * Cloudflare puts the visitor's country on every request, so the currency
+   * is right on first paint with no geo-IP lookup and no client round trip.
+   * Absent locally and anywhere not behind Cloudflare, where it falls back
+   * to naira.
+   */
+  const country = (await headers()).get("cf-ipcountry");
+  const [rates] = await Promise.all([getExchangeRates()]);
+
     return (
       <html lang="en" className={instrumentSans.variable}>
         <body className="font-body antialiased">
-          <CartProvider>
-            {children}
-            {/* Overlays live here, above the provider, so they mount once
-                for the whole app rather than per page. */}
-            <QuickView />
-            <CartDrawer />
-          </CartProvider>
+          <CurrencyProvider
+            initialCurrency={currencyForCountry(country)}
+            rates={rates}
+          >
+            <CartProvider>
+              {children}
+              {/* Overlays live here, above the provider, so they mount once
+                  for the whole app rather than per page. */}
+              <QuickView />
+              <CartDrawer />
+            </CartProvider>
+          </CurrencyProvider>
         </body>
     </html>
   )

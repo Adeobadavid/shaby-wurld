@@ -3,7 +3,14 @@ import { NextResponse } from "next/server";
 import { checkoutSchema, formatFullAddress, validationError } from "@/lib/validation";
 import { fetchRates, validateAddress } from "@/lib/shipbubble";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
-import { applyFreeShipping, generateOrderNumber, priceCart, OrderError } from "@/lib/orders";
+import {
+  applyFreeShipping,
+  generateOrderNumber,
+  priceCart,
+  OrderError,
+  INTERNATIONAL_FLAT_TOKEN,
+} from "@/lib/orders";
+import { isDomestic } from "@/lib/regions";
 import { initializeTransaction } from "@/lib/paystack";
 import { getWriteClient } from "@/sanity/client";
 import { getSiteSettings } from "@/sanity/queries";
@@ -61,7 +68,25 @@ export async function POST(request: Request) {
     let serviceCode = "";
     let requestToken = "";
 
-    if (shipping) {
+    if (shipping && !isDomestic(customer.country)) {
+      /**
+       * International: the fee comes from Site Settings, never from the
+       * request. Same rule as the courier path — the browser may say which
+       * option was chosen, never what it costs.
+       */
+      const fee = settings?.internationalShippingFee ?? 0;
+
+      if (fee <= 0) {
+        return NextResponse.json(
+          { error: "We can't ship to that country online yet." },
+          { status: 400 }
+        );
+      }
+
+      quotedShipping = fee;
+      courierName = "International delivery";
+      requestToken = INTERNATIONAL_FLAT_TOKEN;
+    } else if (shipping) {
       const toAddressCode = await validateAddress({
         name: customer.fullName,
         email: customer.email,
@@ -118,6 +143,7 @@ export async function POST(request: Request) {
       shippingCity: customer.city,
       shippingState: customer.state,
       shippingPostalCode: customer.postalCode,
+      shippingCountry: customer.country,
       // All three from the server's own quote, not the request body.
       shippingCourier: courierName,
       shipbubbleRequestToken: requestToken,

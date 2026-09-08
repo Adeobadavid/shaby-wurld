@@ -227,6 +227,16 @@ export const siteSettings = defineType({
       validation: (Rule) => Rule.min(0).integer(),
     }),
     defineField({
+      name: "internationalShippingFee",
+      title: "International delivery fee (₦)",
+      type: "number",
+      group: "shipping",
+      description:
+        "Flat fee for orders outside Nigeria, in naira. Shipbubble only quotes Nigerian couriers, so this is what overseas customers are charged. Set 0 to stop accepting international orders.",
+      initialValue: 35000,
+      validation: (Rule) => Rule.min(0).integer(),
+    }),
+    defineField({
       name: "shippingNote",
       title: "Shipping note",
       type: "string",

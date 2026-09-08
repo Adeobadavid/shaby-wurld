@@ -9,13 +9,26 @@ import { createContext, useCallback, useContext, useMemo, useState } from "react
  */
 
 export type CartItem = {
+  /** Sanity product id. Several bag lines can share one — one per shade. */
   id: string;
+  /**
+   * Identity of a bag LINE: product + shade. The bag used to key on `id`
+   * alone, so adding shade #10 and then #03 of the same liner merged into a
+   * single line showing the first shade — the second was silently
+   * unorderable. Quantity and remove also act on this, or they would hit
+   * whichever shade happened to come first.
+   */
+  lineId: string;
   name: string;
   variant: string;
   image: string;
   price: number;
   qty: number;
 };
+
+/** Product plus shade, so each shade is its own bag line. */
+export const lineIdFor = (productId: string, variant?: string) =>
+  `${productId}::${variant ?? ""}`;
 
 export type QuickViewProduct = {
   id: string;
@@ -38,9 +51,10 @@ export type DrawerStep = "bag" | "checkout";
 
 type CartContextType = {
   items: CartItem[];
-  addItem: (item: Omit<CartItem, "qty">, qty?: number) => void;
-  removeItem: (id: string) => void;
-  updateQty: (id: string, qty: number) => void;
+  /** lineId is derived from product + shade, so callers never pass it. */
+  addItem: (item: Omit<CartItem, "qty" | "lineId">, qty?: number) => void;
+  removeItem: (lineId: string) => void;
+  updateQty: (lineId: string, qty: number) => void;
   subtotal: number;
   count: number;
 
@@ -68,23 +82,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [step, setStep] = useState<DrawerStep>("bag");
   const [quickViewProduct, setQuickViewProduct] = useState<QuickViewProduct | null>(null);
 
-  const addItem = useCallback((item: Omit<CartItem, "qty">, qty = 1) => {
+  const addItem = useCallback((item: Omit<CartItem, "qty" | "lineId">, qty = 1) => {
+    const lineId = lineIdFor(item.id, item.variant);
+
     setItems((prev) => {
-      const existing = prev.find((i) => i.id === item.id);
+      const existing = prev.find((i) => i.lineId === lineId);
       if (existing) {
-        return prev.map((i) => (i.id === item.id ? { ...i, qty: i.qty + qty } : i));
+        return prev.map((i) => (i.lineId === lineId ? { ...i, qty: i.qty + qty } : i));
       }
-      return [...prev, { ...item, qty }];
+      return [...prev, { ...item, lineId, qty }];
     });
   }, []);
 
-  const removeItem = useCallback((id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
+  const removeItem = useCallback((lineId: string) => {
+    setItems((prev) => prev.filter((i) => i.lineId !== lineId));
   }, []);
 
-  const updateQty = useCallback((id: string, qty: number) => {
+  const updateQty = useCallback((lineId: string, qty: number) => {
     setItems((prev) =>
-      qty <= 0 ? prev.filter((i) => i.id !== id) : prev.map((i) => (i.id === id ? { ...i, qty } : i))
+      qty <= 0
+        ? prev.filter((i) => i.lineId !== lineId)
+        : prev.map((i) => (i.lineId === lineId ? { ...i, qty } : i))
     );
   }, []);
 

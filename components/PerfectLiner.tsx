@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useCart } from "@/lib/cart-context";
+import { useCurrency } from "@/lib/currency-context";
 
 /**
  * Feature strip — Figma node 265:1159, originally "The Perfect Liner".
@@ -46,6 +47,7 @@ const FALLBACK = {
 };
 
 export default function PerfectLiner({ product }: { product?: FeatureProduct | null }) {
+  const { format } = useCurrency();
   const [shadeIndex, setShadeIndex] = useState(0);
   const { addItem, openBag } = useCart();
 
@@ -160,7 +162,7 @@ export default function PerfectLiner({ product }: { product?: FeatureProduct | n
               )}
 
               <p className="font-display text-[28px] text-[#262626] lg:text-[32px]">
-                ₦{price.toLocaleString()}.00
+                {format(price)}
               </p>
             </div>
 
@@ -219,7 +221,7 @@ export default function PerfectLiner({ product }: { product?: FeatureProduct | n
           )}
 
           <p className="font-display text-[28px] text-[#262626]">
-            ₦{price.toLocaleString()}.00
+            {format(price)}
           </p>
         </div>
 

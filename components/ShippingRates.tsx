@@ -1,5 +1,7 @@
 "use client";
 
+import { useCurrency } from "@/lib/currency-context";
+
 export type Rate = {
   courierId: string;
   courierName: string;
@@ -32,6 +34,8 @@ export default function ShippingRates({
   addressReady: boolean;
   freeShipping: boolean;
 }) {
+  const { format } = useCurrency();
+
   return (
     <div className="flex flex-col gap-4">
       <p className="font-body text-[12px] font-semibold text-black">DELIVERY</p>
@@ -93,7 +97,7 @@ export default function ShippingRates({
                 {freeShipping ? (
                   <span className="text-sw-blush">Free</span>
                 ) : (
-                  `₦${rate.amount.toLocaleString()}`
+                  format(rate.amount)
                 )}
               </span>
             </button>

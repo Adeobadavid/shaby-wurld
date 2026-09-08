@@ -50,6 +50,7 @@ export type SiteSettings = {
   socialLinks: SocialLink[];
   orderWhatsappNumber: string;
   freeShippingThreshold: number;
+  internationalShippingFee: number;
   shippingNote?: string;
 };
 
@@ -120,6 +121,7 @@ export const siteSettingsQuery = groq`
     socialLinks[]{ platform, url },
     orderWhatsappNumber,
     "freeShippingThreshold": coalesce(freeShippingThreshold, 50000),
+    "internationalShippingFee": coalesce(internationalShippingFee, 0),
     shippingNote
   }
 `;
