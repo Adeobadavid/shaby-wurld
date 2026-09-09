@@ -5,6 +5,7 @@ import { verifyWebhookSignature } from "@/lib/paystack-webhook";
 import { getWriteClient } from "@/sanity/client";
 import { getSiteSettings } from "@/sanity/queries";
 import { notifyNewOrder } from "@/lib/whatsapp";
+import { sendOrderEmail } from "@/lib/email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,7 +22,7 @@ export const dynamic = "force-dynamic";
  *  3. Be idempotent. Paystack retries, and a retry must not double-notify.
  *
  * Set the URL in Paystack: Settings -> API Keys & Webhooks ->
- *   https://yourdomain.com/api/paystack/webhook
+ *   https://shabywurld.com/api/paystack/webhook
  */
 export async function POST(request: Request) {
   // Raw text, not request.json() — parsing changes the bytes and breaks the HMAC.
@@ -53,9 +54,15 @@ export async function POST(request: Request) {
     const sanity = getWriteClient();
 
     const order = await sanity.fetch(
+      // customerEmail and the full address are here for the notification
+      // email — without them the message arrives with a half-empty address
+      // block and no way to reply to the customer.
       `*[_type == "order" && paystackReference == $reference][0]{
-         _id, status, total, orderNumber, customerName, customerPhone,
-         shippingAddress, shippingCity, shippingCourier, subtotal, shippingCost,
+         _id, status, total, orderNumber,
+         customerName, customerEmail, customerPhone,
+         shippingAddress, shippingCity, shippingState, shippingPostalCode,
+         shippingCountry, shippingCourier,
+         subtotal, shippingCost,
          items[]{ name, shade, qty, unitPrice }
        }`,
       { reference }
@@ -105,17 +112,35 @@ export async function POST(request: Request) {
     };
 
     try {
-      const { sent, link } = await notifyNewOrder(
-        notification,
-        settings?.orderWhatsappNumber ?? ""
-      );
+      /**
+       * Email and WhatsApp are tried together rather than as a fallback
+       * chain. They fail for unrelated reasons — a Resend outage, an expired
+       * Meta token — and the point of a notification is that the owner finds
+       * out. One arriving twice is a far smaller problem than none arriving.
+       */
+      const [emailSent, whatsapp] = await Promise.all([
+        sendOrderEmail({
+          ...notification,
+          customerEmail: order.customerEmail,
+          state: order.shippingState ?? "",
+          postalCode: order.shippingPostalCode,
+          country: order.shippingCountry,
+          studioUrl: `https://shabywurld.sanity.studio/structure/order;${order._id}`,
+        }),
+        notifyNewOrder(notification, settings?.orderWhatsappNumber ?? ""),
+      ]);
 
-      if (sent) {
+      if (emailSent || whatsapp.sent) {
         await sanity.patch(order._id).set({ notifiedAt: new Date().toISOString() }).commit();
       } else {
-        // wa.me path: the link is logged for the owner to open. Worth wiring
-        // to email or a dashboard once the Cloud API is approved.
-        console.info("[order] notify via link:", link);
+        // Nothing was delivered. Logged loudly rather than quietly, because
+        // this means a paid order nobody has been told about.
+        console.error(
+          "[order] NOT NOTIFIED — no channel configured or all failed:",
+          order.orderNumber,
+          "wa.me fallback:",
+          whatsapp.link
+        );
       }
     } catch (notifyError) {
       console.error("[paystack webhook] notification failed", notifyError);

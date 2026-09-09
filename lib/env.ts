@@ -46,6 +46,14 @@ export const env = {
 
   /* WhatsApp Cloud API — only needed for the automatic notification path.
      The wa.me fallback requires none of these. */
+  /* Resend — order notification email. Optional: without it the app still
+     takes orders, it just cannot tell anyone about them. */
+  resendApiKey: () => optional("RESEND_API_KEY"),
+  orderEmailTo: () => optional("ORDER_EMAIL_TO"),
+  /* Must be on a domain verified in Resend, or delivery is refused. */
+  orderEmailFrom: () =>
+    optional("ORDER_EMAIL_FROM") || "Shaby Wurld <orders@shabywurld.com>",
+
   whatsappToken: () => optional("WHATSAPP_ACCESS_TOKEN"),
   whatsappPhoneNumberId: () => optional("WHATSAPP_PHONE_NUMBER_ID"),
   whatsappRecipient: () => optional("WHATSAPP_RECIPIENT_NUMBER"),
