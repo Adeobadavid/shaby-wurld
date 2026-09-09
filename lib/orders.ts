@@ -85,4 +85,11 @@ export function generateOrderNumber(): string {
  */
 export const INTERNATIONAL_FLAT_TOKEN = "international-flat";
 
+/**
+ * Marks a Nigerian quote that fell back to the flat fee because Shipbubble
+ * could not answer. Checkout re-reads the fee from Site Settings rather than
+ * trying to re-verify a quote that no carrier issued.
+ */
+export const DOMESTIC_FLAT_TOKEN = "domestic-flat";
+
 export class OrderError extends Error {}

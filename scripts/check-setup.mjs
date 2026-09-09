@@ -142,6 +142,46 @@ if (!env.SHIPBUBBLE_API_KEY) {
   }
 }
 
+console.log("\n--- Order notifications ---");
+if (!env.RESEND_API_KEY) {
+  console.log(WARN + "RESEND_API_KEY not set locally (production may still have it).");
+} else if (!env.ORDER_EMAIL_TO) {
+  fail("ORDER_EMAIL_TO missing — Resend has nowhere to send the notification.");
+} else {
+  const r = await fetch("https://api.resend.com/domains", {
+    headers: { Authorization: `Bearer ${env.RESEND_API_KEY}` },
+  })
+    .then((x) => x.json())
+    .catch(() => null);
+
+  if (!r || r.name === "validation_error" || r.statusCode >= 400) {
+    fail(`Resend key rejected: ${r?.message ?? "unknown"}`);
+  } else {
+    console.log(PASS + `Resend key works — notifications go to ${env.ORDER_EMAIL_TO}`);
+
+    const domains = r.data ?? [];
+    const verified = domains.filter((d) => d.status === "verified");
+    const from = env.ORDER_EMAIL_FROM ?? "orders@shabywurld.com";
+    const fromDomain = from.split("@").pop()?.replace(/>$/, "").trim();
+
+    // A sending domain that is not verified means Resend refuses the send
+    // outright — the notification fails silently unless this is caught here.
+    if (verified.length === 0) {
+      console.log(
+        WARN + "no verified domain in Resend — sends are refused except to your own signup address."
+      );
+    } else if (!verified.some((d) => d.name === fromDomain)) {
+      fail(
+        `ORDER_EMAIL_FROM uses @${fromDomain}, which is not verified in Resend. Verified: ${verified
+          .map((d) => d.name)
+          .join(", ")}`
+      );
+    } else {
+      console.log(PASS + `sending domain ${fromDomain} is verified`);
+    }
+  }
+}
+
 console.log("\n--- Site ---");
 const url = env.NEXT_PUBLIC_SITE_URL ?? "";
 if (url.includes("localhost")) {

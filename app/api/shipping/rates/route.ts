@@ -3,7 +3,12 @@ import { NextResponse } from "next/server";
 import { formatFullAddress, shippingRatesSchema, validationError } from "@/lib/validation";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { fetchRates, validateAddress } from "@/lib/shipbubble";
-import { priceCart, OrderError, INTERNATIONAL_FLAT_TOKEN } from "@/lib/orders";
+import {
+  priceCart,
+  OrderError,
+  INTERNATIONAL_FLAT_TOKEN,
+  DOMESTIC_FLAT_TOKEN,
+} from "@/lib/orders";
 import { isDomestic } from "@/lib/regions";
 import { getSiteSettings } from "@/sanity/queries";
 
@@ -82,27 +87,74 @@ export async function POST(request: Request) {
       });
     }
 
-    const toAddressCode = await validateAddress({
-      name: customer.fullName,
-      email: customer.email,
-      phone: customer.phone,
-      address: formatFullAddress(customer),
+    /**
+     * Live courier rates, with a flat fee as a safety net.
+     *
+     * Shipbubble can refuse for reasons that have nothing to do with the
+     * customer: an empty wallet (address validation is billed), an outage, or
+     * an address no courier serves. Treating any of those as fatal meant a
+     * Nigerian customer could not check out at all — a shipping provider's
+     * billing state should never be able to stop a sale.
+     *
+     * So: try the couriers, and if that fails fall back to the flat fee from
+     * Site Settings. The failure is logged, because a silent fallback that
+     * runs for weeks is its own problem.
+     */
+    try {
+      const toAddressCode = await validateAddress({
+        name: customer.fullName,
+        email: customer.email,
+        phone: customer.phone,
+        address: formatFullAddress(customer),
+      });
+
+      const rates = await fetchRates({
+        toAddressCode,
+        items: cart.items.map((i) => ({
+          name: i.name,
+          quantity: i.qty,
+          unitAmount: i.unitPrice,
+        })),
+      });
+
+      if (rates.length > 0) {
+        // Cheapest first — most customers want that, and it makes the default
+        // selection obvious.
+        rates.sort((a, b) => a.amount - b.amount);
+        return NextResponse.json({ rates, subtotal: cart.subtotal });
+      }
+
+      console.warn("[api/shipping/rates] no couriers returned; using flat fee");
+    } catch (carrierError) {
+      console.error("[api/shipping/rates] carrier lookup failed", carrierError);
+    }
+
+    const settings = await getSiteSettings();
+    const flat = settings?.domesticShippingFee ?? 0;
+
+    if (flat <= 0) {
+      return NextResponse.json(
+        {
+          error:
+            "We couldn't work out delivery for that address. Please message us on WhatsApp and we'll sort it.",
+        },
+        { status: 502 }
+      );
+    }
+
+    return NextResponse.json({
+      rates: [
+        {
+          courierId: "domestic-flat",
+          courierName: "Standard delivery",
+          serviceCode: "",
+          amount: flat,
+          deliveryEta: "2–5 business days",
+          requestToken: DOMESTIC_FLAT_TOKEN,
+        },
+      ],
+      subtotal: cart.subtotal,
     });
-
-    const rates = await fetchRates({
-      toAddressCode,
-      items: cart.items.map((i) => ({
-        name: i.name,
-        quantity: i.qty,
-        unitAmount: i.unitPrice,
-      })),
-    });
-
-    // Cheapest first — most customers want that, and it makes the default
-    // selection obvious.
-    rates.sort((a, b) => a.amount - b.amount);
-
-    return NextResponse.json({ rates, subtotal: cart.subtotal });
   } catch (error) {
     if (error instanceof OrderError) {
       return NextResponse.json({ error: error.message }, { status: 400 });

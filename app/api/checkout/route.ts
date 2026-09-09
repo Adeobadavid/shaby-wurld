@@ -9,6 +9,7 @@ import {
   priceCart,
   OrderError,
   INTERNATIONAL_FLAT_TOKEN,
+  DOMESTIC_FLAT_TOKEN,
 } from "@/lib/orders";
 import { isDomestic } from "@/lib/regions";
 import { initializeTransaction } from "@/lib/paystack";
@@ -86,6 +87,25 @@ export async function POST(request: Request) {
       quotedShipping = fee;
       courierName = "International delivery";
       requestToken = INTERNATIONAL_FLAT_TOKEN;
+    } else if (shipping?.requestToken === DOMESTIC_FLAT_TOKEN) {
+      /**
+       * The rates call could not reach a carrier and returned the flat fee.
+       * Re-read it from Site Settings rather than trusting the request, and
+       * do NOT attempt to re-verify: there is no carrier quote to match, so
+       * checkout would fail on an order the customer was correctly quoted.
+       */
+      const flat = settings?.domesticShippingFee ?? 0;
+
+      if (flat <= 0) {
+        return NextResponse.json(
+          { error: "We couldn't work out delivery for that address." },
+          { status: 400 }
+        );
+      }
+
+      quotedShipping = flat;
+      courierName = "Standard delivery";
+      requestToken = DOMESTIC_FLAT_TOKEN;
     } else if (shipping) {
       const toAddressCode = await validateAddress({
         name: customer.fullName,

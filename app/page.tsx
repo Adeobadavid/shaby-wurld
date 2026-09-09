@@ -17,7 +17,10 @@ import { getProducts, getReviews, getSiteSettings } from "@/sanity/queries";
  * Revalidates every 60s (see sanity/queries.ts), which is what makes Studio
  * edits appear without a redeploy.
  */
-export const revalidate = 60;
+// One hour, not one minute: each revalidation is a KV write and the free
+// tier allows 1,000 a day. A Sanity webhook hits /api/revalidate on publish,
+// so edits still appear immediately — this is just the fallback.
+export const revalidate = 3600;
 
 export default async function Home() {
   // One round of fetches in parallel rather than a waterfall.

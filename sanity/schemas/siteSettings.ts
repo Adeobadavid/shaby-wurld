@@ -227,6 +227,16 @@ export const siteSettings = defineType({
       validation: (Rule) => Rule.min(0).integer(),
     }),
     defineField({
+      name: "domesticShippingFee",
+      title: "Fallback delivery fee, Nigeria (₦)",
+      type: "number",
+      group: "shipping",
+      description:
+        "Used when Shipbubble cannot return live courier rates — an empty wallet, an outage, or an address no courier serves. Without it a customer simply cannot check out when that happens. Set 0 to fail hard instead.",
+      initialValue: 5000,
+      validation: (Rule) => Rule.min(0).integer(),
+    }),
+    defineField({
       name: "internationalShippingFee",
       title: "International delivery fee (₦)",
       type: "number",

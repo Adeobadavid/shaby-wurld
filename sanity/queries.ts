@@ -51,6 +51,7 @@ export type SiteSettings = {
   orderWhatsappNumber: string;
   freeShippingThreshold: number;
   internationalShippingFee: number;
+  domesticShippingFee: number;
   shippingNote?: string;
 };
 
@@ -123,6 +124,7 @@ export const siteSettingsQuery = groq`
     orderWhatsappNumber,
     "freeShippingThreshold": coalesce(freeShippingThreshold, 50000),
     "internationalShippingFee": coalesce(internationalShippingFee, 0),
+    "domesticShippingFee": coalesce(domesticShippingFee, 0),
     shippingNote
   }
 `;
@@ -138,11 +140,21 @@ export const reviewsQuery = groq`
 /* ------------------------------------------------------------------ *
  * Fetchers
  *
- * `revalidate: 60` means edits in the Studio appear within a minute
+ * `revalidate` is one hour, not one minute.
+ *
+ * Every revalidation writes to Cloudflare KV, and the free tier allows 1,000
+ * writes a DAY. At 60s a single cached fetch can burn 1,440 on its own, which
+ * is what exhausted the quota. An hour costs 24.
+ *
+ * Content does not wait an hour to appear: /api/revalidate purges the cache
+ * on demand, and a Sanity webhook calls it whenever a document is published.
+ * The interval is only the safety net for a missed webhook.
+ *
+ * The old comment said edits appear within a minute
  * without a redeploy, while still serving cached HTML to most visitors.
  * ------------------------------------------------------------------ */
 
-const CACHE = { next: { revalidate: 60 } } as const;
+const CACHE = { next: { revalidate: 3600, tags: ["sanity"] } };
 
 export async function getProducts(): Promise<Product[]> {
   return client.fetch(productsQuery, {}, CACHE);

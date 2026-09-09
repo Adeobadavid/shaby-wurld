@@ -48,6 +48,9 @@ export const env = {
      The wa.me fallback requires none of these. */
   /* Resend — order notification email. Optional: without it the app still
      takes orders, it just cannot tell anyone about them. */
+  /* Shared with the Sanity webhook that purges the cache on publish. */
+  sanityWebhookSecret: () => optional("SANITY_WEBHOOK_SECRET"),
+
   resendApiKey: () => optional("RESEND_API_KEY"),
   orderEmailTo: () => optional("ORDER_EMAIL_TO"),
   /* Must be on a domain verified in Resend, or delivery is refused. */
