@@ -92,4 +92,10 @@ export const INTERNATIONAL_FLAT_TOKEN = "international-flat";
  */
 export const DOMESTIC_FLAT_TOKEN = "domestic-flat";
 
+/**
+ * Marks a quote from Fez's public rate endpoint. There is no booking to
+ * verify against, so checkout re-quotes rather than matching a courier id.
+ */
+export const FEZ_TOKEN = "fez-quote";
+
 export class OrderError extends Error {}

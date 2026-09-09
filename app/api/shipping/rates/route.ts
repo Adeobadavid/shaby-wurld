@@ -8,8 +8,10 @@ import {
   OrderError,
   INTERNATIONAL_FLAT_TOKEN,
   DOMESTIC_FLAT_TOKEN,
+  FEZ_TOKEN,
 } from "@/lib/orders";
 import { isDomestic } from "@/lib/regions";
+import { getFezQuote } from "@/lib/fez";
 import { getSiteSettings } from "@/sanity/queries";
 
 export const runtime = "nodejs";
@@ -99,6 +101,42 @@ export async function POST(request: Request) {
      * So: try the couriers, and if that fails fall back to the flat fee from
      * Site Settings. The failure is logged, because a silent fallback that
      * runs for weeks is its own problem.
+     */
+    /**
+     * Fez first. Its public quote endpoint needs no key and no wallet, and
+     * bills nothing for asking — unlike Shipbubble, where every quote costs
+     * an address validation. Verified against a real order: Fez direct came
+     * within 2% of what Shipbubble charged for the same Fez delivery.
+     */
+    const units = cart.items.reduce((n, i) => n + i.qty, 0);
+    const fez = await getFezQuote({
+      state: customer.state,
+      city: customer.city,
+      units,
+    });
+
+    if (fez) {
+      return NextResponse.json({
+        rates: [
+          {
+            courierId: "fez",
+            courierName: "Fez Delivery",
+            serviceCode: "",
+            // VAT included: the customer should see one number, and it is
+            // what they will actually be charged.
+            amount: fez.total,
+            deliveryEta: "2–5 business days",
+            requestToken: FEZ_TOKEN,
+          },
+        ],
+        subtotal: cart.subtotal,
+      });
+    }
+
+    /**
+     * Shipbubble second. Kept because it can compare carriers, which Fez
+     * cannot — but it only runs when Fez has no rate for the destination,
+     * so the wallet is spent rarely rather than on every keystroke.
      */
     try {
       const toAddressCode = await validateAddress({

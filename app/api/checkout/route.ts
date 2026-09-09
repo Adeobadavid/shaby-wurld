@@ -10,8 +10,10 @@ import {
   OrderError,
   INTERNATIONAL_FLAT_TOKEN,
   DOMESTIC_FLAT_TOKEN,
+  FEZ_TOKEN,
 } from "@/lib/orders";
 import { isDomestic } from "@/lib/regions";
+import { getFezQuote } from "@/lib/fez";
 import { initializeTransaction } from "@/lib/paystack";
 import { getWriteClient } from "@/sanity/client";
 import { getSiteSettings } from "@/sanity/queries";
@@ -87,6 +89,38 @@ export async function POST(request: Request) {
       quotedShipping = fee;
       courierName = "International delivery";
       requestToken = INTERNATIONAL_FLAT_TOKEN;
+    } else if (shipping?.requestToken === FEZ_TOKEN) {
+      /**
+       * Re-quote Fez rather than trusting the amount in the request — same
+       * rule as the courier path, the browser says which option, never what
+       * it costs. If the re-quote fails (their endpoint is undocumented and
+       * could change), fall through to the flat fee rather than rejecting an
+       * order the customer was correctly quoted moments ago.
+       */
+      const units = cart.items.reduce((n, i) => n + i.qty, 0);
+      const fez = await getFezQuote({
+        state: customer.state,
+        city: customer.city,
+        units,
+      });
+
+      if (fez) {
+        quotedShipping = fez.total;
+        courierName = "Fez Delivery";
+      } else {
+        const flat = settings?.domesticShippingFee ?? 0;
+        if (flat <= 0) {
+          return NextResponse.json(
+            { error: "We couldn't confirm delivery for that address. Please try again." },
+            { status: 400 }
+          );
+        }
+        console.warn("[api/checkout] Fez re-quote failed; using flat fee");
+        quotedShipping = flat;
+        courierName = "Standard delivery";
+      }
+
+      requestToken = FEZ_TOKEN;
     } else if (shipping?.requestToken === DOMESTIC_FLAT_TOKEN) {
       /**
        * The rates call could not reach a carrier and returned the flat fee.
